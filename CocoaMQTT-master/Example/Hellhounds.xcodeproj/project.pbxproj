@@ -17,6 +17,7 @@
 		04DB76621C1E7BB900776B4C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 04DB76601C1E7BB900776B4C /* LaunchScreen.storyboard */; };
 		04FE64871C2C41AE001E8F43 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04FE64861C2C41AE001E8F43 /* ChatViewController.swift */; };
 		04FE64A71C2D9F75001E8F43 /* ChatLeftMessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04FE64A61C2D9F75001E8F43 /* ChatLeftMessageCell.swift */; };
+		403DA0C1235CF5B600CECD28 /* BatteryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 403DA0C0235CF5B600CECD28 /* BatteryView.swift */; };
 		F5ED7D1B70F44D3F5E5DF37A /* Pods_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33EB0B12055698AEA8D71AD4 /* Pods_Example.framework */; };
 /* End PBXBuildFile section */
 
@@ -37,7 +38,7 @@
 		04029F181DE3F176004513DD /* client-keycert.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "client-keycert.p12"; sourceTree = "<group>"; };
 		042448B21C366F2300F6A33E /* ChatMessage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		04A7EA9F1C362BC4004A40EF /* ChatRightMessageCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRightMessageCell.swift; sourceTree = "<group>"; };
-		04DB76541C1E7BB900776B4C /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		04DB76541C1E7BB900776B4C /* Hellhounds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hellhounds.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		04DB76571C1E7BB900776B4C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		04DB76591C1E7BB900776B4C /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		04DB765C1C1E7BB900776B4C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -48,6 +49,7 @@
 		04FE64A61C2D9F75001E8F43 /* ChatLeftMessageCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatLeftMessageCell.swift; sourceTree = "<group>"; };
 		0BC031E0076FF375408AD8D1 /* Pods-Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Example.release.xcconfig"; path = "Pods/Target Support Files/Pods-Example/Pods-Example.release.xcconfig"; sourceTree = "<group>"; };
 		33EB0B12055698AEA8D71AD4 /* Pods_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		403DA0C0235CF5B600CECD28 /* BatteryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BatteryView.swift; sourceTree = "<group>"; };
 		BE425DD5C76A2598F8AC2CC7 /* Pods-Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Example.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Example/Pods-Example.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -76,7 +78,7 @@
 		04DB76551C1E7BB900776B4C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				04DB76541C1E7BB900776B4C /* Example.app */,
+				04DB76541C1E7BB900776B4C /* Hellhounds.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -85,6 +87,7 @@
 			isa = PBXGroup;
 			children = (
 				04DB76591C1E7BB900776B4C /* ViewController.swift */,
+				403DA0C0235CF5B600CECD28 /* BatteryView.swift */,
 				04FE64861C2C41AE001E8F43 /* ChatViewController.swift */,
 				04FE64A61C2D9F75001E8F43 /* ChatLeftMessageCell.swift */,
 				04A7EA9F1C362BC4004A40EF /* ChatRightMessageCell.swift */,
@@ -127,9 +130,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		04DB76531C1E7BB900776B4C /* Example */ = {
+		04DB76531C1E7BB900776B4C /* Hellhounds */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 04DB76661C1E7BB900776B4C /* Build configuration list for PBXNativeTarget "Example" */;
+			buildConfigurationList = 04DB76661C1E7BB900776B4C /* Build configuration list for PBXNativeTarget "Hellhounds" */;
 			buildPhases = (
 				3A3A6630BAAC2F8275FEC914 /* [CP] Check Pods Manifest.lock */,
 				04DB76501C1E7BB900776B4C /* Sources */,
@@ -142,9 +145,9 @@
 			);
 			dependencies = (
 			);
-			name = Example;
+			name = Hellhounds;
 			productName = Example;
-			productReference = 04DB76541C1E7BB900776B4C /* Example.app */;
+			productReference = 04DB76541C1E7BB900776B4C /* Hellhounds.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -164,7 +167,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 04DB764F1C1E7BB800776B4C /* Build configuration list for PBXProject "Example" */;
+			buildConfigurationList = 04DB764F1C1E7BB800776B4C /* Build configuration list for PBXProject "Hellhounds" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -178,7 +181,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				04DB76531C1E7BB900776B4C /* Example */,
+				04DB76531C1E7BB900776B4C /* Hellhounds */,
 			);
 		};
 /* End PBXProject section */
@@ -243,6 +246,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				403DA0C1235CF5B600CECD28 /* BatteryView.swift in Sources */,
 				04FE64A71C2D9F75001E8F43 /* ChatLeftMessageCell.swift in Sources */,
 				04A7EAA01C362BC4004A40EF /* ChatRightMessageCell.swift in Sources */,
 				04DB765A1C1E7BB900776B4C /* ViewController.swift in Sources */,
@@ -415,7 +419,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		04DB764F1C1E7BB800776B4C /* Build configuration list for PBXProject "Example" */ = {
+		04DB764F1C1E7BB800776B4C /* Build configuration list for PBXProject "Hellhounds" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				04DB76641C1E7BB900776B4C /* Debug */,
@@ -424,7 +428,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		04DB76661C1E7BB900776B4C /* Build configuration list for PBXNativeTarget "Example" */ = {
+		04DB76661C1E7BB900776B4C /* Build configuration list for PBXNativeTarget "Hellhounds" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				04DB76671C1E7BB900776B4C /* Debug */,

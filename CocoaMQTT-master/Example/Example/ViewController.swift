@@ -23,13 +23,23 @@ class ViewController: UIViewController {
     var mqtt: CocoaMQTT?
     
     @IBOutlet weak var connectButton: UIButton!
-    @IBOutlet weak var ledSwitch: UISwitch!
+    @IBOutlet weak var ledSwitch1: UISwitch!
     @IBOutlet weak var ledSlider1: UISlider!
     @IBOutlet weak var ledSwitch2: UISwitch!
     @IBOutlet weak var ledSlider2: UISlider!
     @IBOutlet weak var ledSwitch3: UISwitch!
     @IBOutlet weak var ledSlider3: UISlider!
+    @IBOutlet weak var batteryMeter1: BatteryView!
+
+    lazy var hellhounds = getHellhounds()
     
+    func getHellhounds() -> [(ledSwitch: UISwitch, ledSlider: UISlider, battery: BatteryView)] {
+        return [(ledSwitch1, ledSlider1, batteryMeter1),
+            (ledSwitch2, ledSlider2, batteryMeter1),
+            (ledSwitch3, ledSlider3, batteryMeter1)]
+    }
+    
+
     @IBAction func connectToServer() {
         _ = mqtt!.connect()
     }
@@ -62,16 +72,30 @@ class ViewController: UIViewController {
         // selfSignedSSLSetting()
         // simpleSSLSetting()
         
-        ledSlider1.maximumValue = 100.0
-        ledSlider1.isContinuous = false; // only get valueChanged on lift finger.
-        ledSlider2.maximumValue = 100.0
-        ledSlider2.isContinuous = false;
-        ledSlider3.maximumValue = 100.0
-        ledSlider3.isContinuous = false;
+        for hound in hellhounds {
+            hound.ledSlider.maximumValue = 100.0
+            hound.ledSlider.isContinuous = false
+            hound.battery.direction = .maxXEdge
+            hound.battery.level = 4
+        }
+
+        if let tabBarController = self.tabBarController {
+            var viewControllers = tabBarController.viewControllers
+            viewControllers?.remove(at: 2)
+            viewControllers?.remove(at: 1)
+            tabBarController.viewControllers = viewControllers
+        }
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
         navigationController?.navigationBar.isHidden = false
+    }
+    
+    func updateHellhoundView(index: Int, isOn: Bool, brightness: Int, batteryLevel: Int) {
+        hellhounds[index].ledSwitch.isOn = isOn
+        hellhounds[index].ledSlider.value = Float(brightness)
+        hellhounds[index].battery.level = Int(batteryLevel)
     }
     
     func mqttSetting() {
@@ -202,15 +226,20 @@ extension ViewController: CocoaMQTTDelegate {
     }
     
     func mqtt(_ mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16 ) {
-        TRACE("message: \(message.string.description), id: \(id)")
-        var array = message.string.description.components(separatedBy: CharacterSet.decimalDigits.inverted)
-        array = array.filter(){$0 != ""}
-        assert(array.count>=2, "too few integers in status message")
-        let switchOn = Int(array[0])==1
-        let sliderValue = Float(array[1]) ?? 0
-        TRACE("    array: \(array) switchOn: \(switchOn) sliderValue: \(sliderValue)")
-        ledSwitch.isOn = switchOn
-        ledSlider1.value = sliderValue
+        let messageString = String(message.string.description.filter { !"\n\r".contains($0) })
+
+        TRACE("message: \(messageString), id: \(id)")
+        var valueArray = message.string.description.components(separatedBy: CharacterSet.decimalDigits.inverted)
+        valueArray = valueArray.filter(){$0 != ""}
+        assert(valueArray.count>=2, "too few integers in status message")
+
+        let switchOn = Int(valueArray[0])==1
+        let brightness = Int(valueArray[1]) ?? 0
+        TRACE("    array: \(valueArray) switchOn: \(switchOn) brightness: \(brightness)")
+
+        updateHellhoundView(index: 0, isOn: switchOn, brightness: brightness, batteryLevel: brightness)
+        updateHellhoundView(index: 1, isOn: switchOn, brightness: brightness, batteryLevel: brightness)
+        updateHellhoundView(index: 2, isOn: switchOn, brightness: brightness, batteryLevel: brightness)
     }
     
     func mqtt(_ mqtt: CocoaMQTT, didSubscribeTopic topics: [String]) {

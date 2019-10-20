@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "04DB76531C1E7BB900776B4C"
-               BuildableName = "Example.app"
-               BlueprintName = "Example"
-               ReferencedContainer = "container:Example.xcodeproj">
+               BuildableName = "Hellhounds.app"
+               BlueprintName = "Hellhounds"
+               ReferencedContainer = "container:Hellhounds.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "04DB76531C1E7BB900776B4C"
-            BuildableName = "Example.app"
-            BlueprintName = "Example"
-            ReferencedContainer = "container:Example.xcodeproj">
+            BuildableName = "Hellhounds.app"
+            BlueprintName = "Hellhounds"
+            ReferencedContainer = "container:Hellhounds.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -62,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "04DB76531C1E7BB900776B4C"
-            BuildableName = "Example.app"
-            BlueprintName = "Example"
-            ReferencedContainer = "container:Example.xcodeproj">
+            BuildableName = "Hellhounds.app"
+            BlueprintName = "Hellhounds"
+            ReferencedContainer = "container:Hellhounds.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
