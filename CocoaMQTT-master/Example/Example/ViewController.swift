@@ -12,17 +12,21 @@ import CocoaMQTT
 
 class ViewController: UIViewController {
 //    let defaultHost = "127.0.0.1"
-    let defaultHost   = "broker.hivemq.com"
-    let topicPrefix   = "HellHounds-MQTT/esp/"
-    let topicSetState = "set-state"
-    let topicSetLevel = "set-level"
-    let topicStatus   = "/status"
-    let mqttLedOn     = "0"
-    let mqttLedOff    = "1"
+    let defaultHost      = "broker.hivemq.com"
+    let kTopicPrefix     = "HellHounds-MQTT"
+    let kTopicSetState   = "set-state"
+    let kTopicSetLevel   = "set-level"
+    let kTopicStatus     = "status"
+    let kTopicStatusJSON = "status-json"
+    let kTopicGetStatus  = "msg"
+    let kMqttLedOn       = "0"
+    let kMqttLedOff      = "1"
+    let kEmptyResponse   = "EMPTY_RESPONSE"
 
     var mqtt: CocoaMQTT?
     
     @IBOutlet weak var connectButton: UIButton!
+    @IBOutlet weak var connectSpinner: UIActivityIndicatorView!
     @IBOutlet weak var ledSwitch1: UISwitch!
     @IBOutlet weak var ledSlider1: UISlider!
     @IBOutlet weak var ledSwitch2: UISwitch!
@@ -30,30 +34,87 @@ class ViewController: UIViewController {
     @IBOutlet weak var ledSwitch3: UISwitch!
     @IBOutlet weak var ledSlider3: UISlider!
     @IBOutlet weak var batteryMeter1: BatteryView!
-
+    @IBOutlet weak var batteryMeter2: BatteryView!
+    @IBOutlet weak var batteryMeter3: BatteryView!
+    
     lazy var hellhounds = getHellhounds()
     
     func getHellhounds() -> [(ledSwitch: UISwitch, ledSlider: UISlider, battery: BatteryView)] {
         return [(ledSwitch1, ledSlider1, batteryMeter1),
-            (ledSwitch2, ledSlider2, batteryMeter1),
-            (ledSwitch3, ledSlider3, batteryMeter1)]
+            (ledSwitch2, ledSlider2, batteryMeter2),
+            (ledSwitch3, ledSlider3, batteryMeter3)]
     }
     
 
     @IBAction func connectToServer() {
         _ = mqtt!.connect()
+        connectSpinner.startAnimating()
+    }
+    
+    func fullTopicFor(topic: String, hellhoundIndex: Int) -> String {
+        return "\(kTopicPrefix)/\(hellhoundIndex)/\(topic)"
+    }
+    
+    func fullTopicForAllHounds(topic: String) -> String {
+        return kTopicPrefix + "$" + topic
     }
     
     func mqttSetState(value: Bool, hellhoundIndex: Int) {
-        let topic = topicPrefix + topicSetState
-        let stateValue = value ? mqttLedOff : mqttLedOn
+        let topic = fullTopicFor(topic: kTopicSetState, hellhoundIndex: hellhoundIndex)
+        let stateValue = value ? kMqttLedOff : kMqttLedOn
         mqtt!.publish(topic, withString: stateValue, qos: .qos0)
     }
     
     func mqttSetBrightness(value: Int, hellhoundIndex: Int) {
-        let topic = topicPrefix + topicSetLevel
+        let topic = fullTopicFor(topic: kTopicSetLevel, hellhoundIndex: hellhoundIndex)
         let stateValue = String(value)
+        TRACE("SET BRIGHTNESS TOPIC: \(topic), SV:\(stateValue)")
         mqtt!.publish(topic, withString: stateValue, qos: .qos0)
+    }
+    
+    func mqttGetStatus() {
+        for i in 0...2
+        {
+            let topic = fullTopicFor(topic: kTopicGetStatus, hellhoundIndex: i)
+            // value is ignored. "0" arbitrary
+            mqtt!.publish(topic, withString: "0", qos: .qos0)
+        }
+    }
+    
+    func mqttSubscribeStatus() {
+        for i in 0...2
+        {
+//            let subscribeTopic = fullTopicFor(topic: kTopicStatus, hellhoundIndex: i)
+//            mqtt!.subscribe(subscribeTopic, qos: CocoaMQTTQOS.qos1)
+            let subscribeJSONTopic = fullTopicFor(topic: kTopicStatusJSON, hellhoundIndex: i)
+            mqtt!.subscribe(subscribeJSONTopic, qos: CocoaMQTTQOS.qos1)
+        }
+    }
+    
+    func mqttHandleMessage(topic: String, message: String) {
+        let topicComponents = topic.components(separatedBy: "/")
+        assert(topicComponents.count == 3);
+        let hellhoundId = topicComponents[2];
+        if topicComponents[2] == kTopicStatusJSON {
+            do {
+                let filteredMessage = message.filter { !"\\".contains($0) }
+                print (filteredMessage)
+                let data = Data(filteredMessage.utf8)
+                if let jsonArray = try JSONSerialization.jsonObject(with: data, options : .allowFragments) as? [String: Int]
+                {
+                   print(jsonArray) // use the json here
+                    let ledState = (jsonArray["ledState"] == 1)
+                    let brightness = jsonArray["ledLvl"]!
+                    let battery = jsonArray["battery"]!
+                    updateHellhoundView(index: Int(hellhoundId) ?? 0, isOn: ledState, brightness: brightness, batteryLevel: battery)
+                } else {
+                    print("bad json")
+                }
+            } catch let error as NSError {
+                print(error)
+            }
+            return;
+        }
     }
     
     @IBAction func ledSwitchValueChanged(_ sender: UISwitch) {
@@ -77,6 +138,7 @@ class ViewController: UIViewController {
             hound.ledSlider.isContinuous = false
             hound.battery.direction = .maxXEdge
             hound.battery.level = 4
+            hound.battery.lowThreshold = 20
         }
 
         if let tabBarController = self.tabBarController {
@@ -202,14 +264,12 @@ extension ViewController: CocoaMQTTDelegate {
         TRACE("ack: \(ack)")
 
         if ack == .accept {
-            mqtt.subscribe("HellHounds-MQTT/esp/status", qos: CocoaMQTTQOS.qos1)
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
-//                mqtt.publish("HellHounds-MQTT/esp/status", withString: "", qos: .qos0)
-//            }
-
-//            let chatViewController = storyboard?.instantiateViewController(withIdentifier: "ChatViewController") as? ChatViewController
-//            chatViewController?.mqtt = mqtt
-//            navigationController!.pushViewController(chatViewController!, animated: true)
+            connectButton.isSelected = true
+            connectSpinner.stopAnimating()
+            self.mqttSubscribeStatus()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                self.mqttGetStatus()
+            }
         }
     }
     
@@ -226,20 +286,9 @@ extension ViewController: CocoaMQTTDelegate {
     }
     
     func mqtt(_ mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16 ) {
-        let messageString = String(message.string.description.filter { !"\n\r".contains($0) })
-
+        let messageString = message.string ?? kEmptyResponse;
         TRACE("message: \(messageString), id: \(id)")
-        var valueArray = message.string.description.components(separatedBy: CharacterSet.decimalDigits.inverted)
-        valueArray = valueArray.filter(){$0 != ""}
-        assert(valueArray.count>=2, "too few integers in status message")
-
-        let switchOn = Int(valueArray[0])==1
-        let brightness = Int(valueArray[1]) ?? 0
-        TRACE("    array: \(valueArray) switchOn: \(switchOn) brightness: \(brightness)")
-
-        updateHellhoundView(index: 0, isOn: switchOn, brightness: brightness, batteryLevel: brightness)
-        updateHellhoundView(index: 1, isOn: switchOn, brightness: brightness, batteryLevel: brightness)
-        updateHellhoundView(index: 2, isOn: switchOn, brightness: brightness, batteryLevel: brightness)
+        mqttHandleMessage(topic: message.topic, message: messageString);
     }
     
     func mqtt(_ mqtt: CocoaMQTT, didSubscribeTopic topics: [String]) {
