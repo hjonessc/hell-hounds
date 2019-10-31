@@ -29,6 +29,9 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var connectButton: UIButton!
     @IBOutlet weak var connectSpinner: UIActivityIndicatorView!
+    
+    @IBOutlet weak var masterOnButton: UIButton!
+    @IBOutlet weak var masterOffButton: UIButton!
 
     @IBOutlet weak var ledSwitch1: UISwitch!
     @IBOutlet weak var ledSwitch2: UISwitch!
@@ -49,9 +52,9 @@ class ViewController: UIViewController {
     
     func getHellhounds() -> [(ledSwitch: UISwitch, ledSlider: UISlider, battery: BatteryView)] {
         return [(ledSwitch1, ledSlider1, batteryMeter1),
-            (ledSwitch2, ledSlider2, batteryMeter2),
-            (ledSwitch3, ledSlider3, batteryMeter3),
-        (ledSwitch4, ledSlider4, batteryMeter4),
+                (ledSwitch2, ledSlider2, batteryMeter2),
+                (ledSwitch3, ledSlider3, batteryMeter3),
+                (ledSwitch4, ledSlider4, batteryMeter4),
         ]
     }
 
@@ -139,6 +142,13 @@ class ViewController: UIViewController {
     
     @IBAction func ledBrightnessValueChanged(_ sender: UISlider) {
         mqttSetBrightness(value: Int(round(sender.value)), hellhoundIndex: sender.tag)
+    }
+
+    @IBAction func masterButtonPressed(_ sender: UIButton) {
+        let isOn = sender==masterOnButton
+        for i in 0..<kNumHellhounds {
+            mqttSetState(value: isOn, hellhoundIndex: i)
+        }
     }
 
     override func viewDidLoad() {
