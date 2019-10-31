@@ -23,7 +23,7 @@ class ViewController: UIViewController {
     let kMqttLedOff      = "1"
     let kEmptyResponse   = "EMPTY_RESPONSE"
     
-    let kNumHellhounds = 3
+    let kNumHellhounds = 4
 
     var mqtt: CocoaMQTT?
     
@@ -86,7 +86,7 @@ class ViewController: UIViewController {
     }
     
     func mqttGetStatus() {
-        for i in 0...kNumHellhounds
+        for i in 0..<kNumHellhounds
         {
             let topic = fullTopicFor(topic: kTopicGetStatus, hellhoundIndex: i)
             // value is ignored. "0" arbitrary
@@ -95,7 +95,7 @@ class ViewController: UIViewController {
     }
     
     func mqttSubscribeStatus() {
-        for i in 0...kNumHellhounds
+        for i in 0..<kNumHellhounds
         {
 //            let subscribeTopic = fullTopicFor(topic: kTopicStatus, hellhoundIndex: i)
 //            mqtt!.subscribe(subscribeTopic, qos: CocoaMQTTQOS.qos1)
