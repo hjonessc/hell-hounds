@@ -22,33 +22,46 @@ class ViewController: UIViewController {
     let kMqttLedOn       = "0"
     let kMqttLedOff      = "1"
     let kEmptyResponse   = "EMPTY_RESPONSE"
+    
+    let kNumHellhounds = 3
 
     var mqtt: CocoaMQTT?
     
     @IBOutlet weak var connectButton: UIButton!
     @IBOutlet weak var connectSpinner: UIActivityIndicatorView!
+
     @IBOutlet weak var ledSwitch1: UISwitch!
-    @IBOutlet weak var ledSlider1: UISlider!
     @IBOutlet weak var ledSwitch2: UISwitch!
-    @IBOutlet weak var ledSlider2: UISlider!
     @IBOutlet weak var ledSwitch3: UISwitch!
+    @IBOutlet weak var ledSwitch4: UISwitch!
+
+    @IBOutlet weak var ledSlider1: UISlider!
+    @IBOutlet weak var ledSlider2: UISlider!
     @IBOutlet weak var ledSlider3: UISlider!
+    @IBOutlet weak var ledSlider4: UISlider!
+
     @IBOutlet weak var batteryMeter1: BatteryView!
     @IBOutlet weak var batteryMeter2: BatteryView!
     @IBOutlet weak var batteryMeter3: BatteryView!
-    
+    @IBOutlet weak var batteryMeter4: BatteryView!
+
     lazy var hellhounds = getHellhounds()
     
     func getHellhounds() -> [(ledSwitch: UISwitch, ledSlider: UISlider, battery: BatteryView)] {
         return [(ledSwitch1, ledSlider1, batteryMeter1),
             (ledSwitch2, ledSlider2, batteryMeter2),
-            (ledSwitch3, ledSlider3, batteryMeter3)]
+            (ledSwitch3, ledSlider3, batteryMeter3),
+        (ledSwitch4, ledSlider4, batteryMeter4),
+        ]
     }
-    
+
+    func mqttConnect() {
+        _ = mqtt!.connect()
+    }
 
     @IBAction func connectToServer() {
-        _ = mqtt!.connect()
         connectSpinner.startAnimating()
+        mqttConnect()
     }
     
     func fullTopicFor(topic: String, hellhoundIndex: Int) -> String {
@@ -73,7 +86,7 @@ class ViewController: UIViewController {
     }
     
     func mqttGetStatus() {
-        for i in 0...2
+        for i in 0...kNumHellhounds
         {
             let topic = fullTopicFor(topic: kTopicGetStatus, hellhoundIndex: i)
             // value is ignored. "0" arbitrary
@@ -82,7 +95,7 @@ class ViewController: UIViewController {
     }
     
     func mqttSubscribeStatus() {
-        for i in 0...2
+        for i in 0...kNumHellhounds
         {
 //            let subscribeTopic = fullTopicFor(topic: kTopicStatus, hellhoundIndex: i)
 //            mqtt!.subscribe(subscribeTopic, qos: CocoaMQTTQOS.qos1)
@@ -92,9 +105,12 @@ class ViewController: UIViewController {
     }
     
     func mqttHandleMessage(topic: String, message: String) {
+        connectButton.isSelected = true
+        connectSpinner.stopAnimating()
+
         let topicComponents = topic.components(separatedBy: "/")
         assert(topicComponents.count == 3);
-        let hellhoundId = topicComponents[2];
+        let hellhoundId = topicComponents[1];
         if topicComponents[2] == kTopicStatusJSON {
             do {
                 let filteredMessage = message.filter { !"\\".contains($0) }
@@ -130,6 +146,7 @@ class ViewController: UIViewController {
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         tabBarController?.delegate = self
         mqttSetting()
+        mqttConnect()
         // selfSignedSSLSetting()
         // simpleSSLSetting()
         
@@ -155,6 +172,7 @@ class ViewController: UIViewController {
     }
     
     func updateHellhoundView(index: Int, isOn: Bool, brightness: Int, batteryLevel: Int) {
+        TRACE("index: \(index) isOn: \(isOn) brightness: \(brightness) batteryLevel: \(batteryLevel)")
         hellhounds[index].ledSwitch.isOn = isOn
         hellhounds[index].ledSlider.value = Float(brightness)
         hellhounds[index].battery.level = Int(batteryLevel)
@@ -264,10 +282,8 @@ extension ViewController: CocoaMQTTDelegate {
         TRACE("ack: \(ack)")
 
         if ack == .accept {
-            connectButton.isSelected = true
-            connectSpinner.stopAnimating()
             self.mqttSubscribeStatus()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 self.mqttGetStatus()
             }
         }
