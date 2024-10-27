@@ -103,7 +103,7 @@ class ViewController: UIViewController {
 //            let subscribeTopic = fullTopicFor(topic: kTopicStatus, hellhoundIndex: i)
 //            mqtt!.subscribe(subscribeTopic, qos: CocoaMQTTQOS.qos1)
             let subscribeJSONTopic = fullTopicFor(topic: kTopicStatusJSON, hellhoundIndex: i)
-            mqtt!.subscribe(subscribeJSONTopic, qos: CocoaMQTTQOS.qos1)
+            mqtt!.subscribe(subscribeJSONTopic, qos: CocoaMQTTQoS.qos1)
         }
     }
     
@@ -193,7 +193,7 @@ class ViewController: UIViewController {
         mqtt = CocoaMQTT(clientID: clientID, host: defaultHost, port: 1883)
         mqtt!.username = ""
         mqtt!.password = ""
-        mqtt!.willMessage = CocoaMQTTWill(topic: "/will", message: "dieout")
+        mqtt!.willMessage = CocoaMQTTMessage(topic: "/will", string: "dieout")
         mqtt!.keepAlive = 60
         mqtt!.delegate = self
         mqtt!.didReceiveMessage = { mqtt, message, id in
@@ -207,7 +207,7 @@ class ViewController: UIViewController {
         mqtt = CocoaMQTT(clientID: clientID, host: defaultHost, port: 8883)
         mqtt!.username = ""
         mqtt!.password = ""
-        mqtt!.willMessage = CocoaMQTTWill(topic: "/will", message: "dieout")
+        mqtt!.willMessage = CocoaMQTTMessage(topic: "/will", string: "dieout")
         mqtt!.keepAlive = 60
         mqtt!.delegate = self
         mqtt!.enableSSL = true
@@ -218,7 +218,7 @@ class ViewController: UIViewController {
         mqtt = CocoaMQTT(clientID: clientID, host: defaultHost, port: 8883)
         mqtt!.username = ""
         mqtt!.password = ""
-        mqtt!.willMessage = CocoaMQTTWill(topic: "/will", message: "dieout")
+        mqtt!.willMessage = CocoaMQTTMessage(topic: "/will", string: "dieout")
         mqtt!.keepAlive = 60
         mqtt!.delegate = self
         mqtt!.enableSSL = true
@@ -317,14 +317,14 @@ extension ViewController: CocoaMQTTDelegate {
         mqttHandleMessage(topic: message.topic, message: messageString);
     }
     
-    func mqtt(_ mqtt: CocoaMQTT, didSubscribeTopic topics: [String]) {
+    func mqtt(_ mqtt: CocoaMQTT, didSubscribeTopics success: NSDictionary, failed: [String]) {
+        TRACE("success: \(success), failed: \(failed)")
+    }
+    
+    func mqtt(_ mqtt: CocoaMQTT, didUnsubscribeTopics topics: [String]) {
         TRACE("topics: \(topics)")
     }
-    
-    func mqtt(_ mqtt: CocoaMQTT, didUnsubscribeTopic topic: String) {
-        TRACE("topic: \(topic)")
-    }
-    
+
     func mqttDidPing(_ mqtt: CocoaMQTT) {
         TRACE()
     }
