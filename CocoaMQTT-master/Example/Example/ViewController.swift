@@ -36,17 +36,17 @@ class ViewController: UIViewController {
     @IBOutlet weak var ledSwitch1: UISwitch!
     @IBOutlet weak var ledSwitch2: UISwitch!
     @IBOutlet weak var ledSwitch3: UISwitch!
-    @IBOutlet weak var ledSwitch4: UISwitch!
+    @IBOutlet weak var ledSwitchJack: UISwitch!
 
     @IBOutlet weak var ledSlider1: UISlider!
     @IBOutlet weak var ledSlider2: UISlider!
     @IBOutlet weak var ledSlider3: UISlider!
-    @IBOutlet weak var ledSlider4: UISlider!
+    @IBOutlet weak var ledSliderJack: UISlider!
 
     @IBOutlet weak var batteryMeter1: BatteryView!
     @IBOutlet weak var batteryMeter2: BatteryView!
     @IBOutlet weak var batteryMeter3: BatteryView!
-    @IBOutlet weak var batteryMeter4: BatteryView!
+    @IBOutlet weak var batteryMeterJack: BatteryView!
 
     lazy var hellhounds = getHellhounds()
     
@@ -54,7 +54,7 @@ class ViewController: UIViewController {
         return [(ledSwitch1, ledSlider1, batteryMeter1),
                 (ledSwitch2, ledSlider2, batteryMeter2),
                 (ledSwitch3, ledSlider3, batteryMeter3),
-                (ledSwitch4, ledSlider4, batteryMeter4),
+                (ledSwitchJack, ledSliderJack, batteryMeterJack),
         ]
     }
 
@@ -157,8 +157,6 @@ class ViewController: UIViewController {
         tabBarController?.delegate = self
         mqttSetting()
         mqttConnect()
-        // selfSignedSSLSetting()
-        // simpleSSLSetting()
         
         for hound in hellhounds {
             hound.ledSlider.maximumValue = 100.0
@@ -202,36 +200,6 @@ class ViewController: UIViewController {
         
     }
 
-    func simpleSSLSetting() {
-        let clientID = "CocoaMQTT-" + String(ProcessInfo().processIdentifier)
-        mqtt = CocoaMQTT(clientID: clientID, host: defaultHost, port: 8883)
-        mqtt!.username = ""
-        mqtt!.password = ""
-        mqtt!.willMessage = CocoaMQTTMessage(topic: "/will", string: "dieout")
-        mqtt!.keepAlive = 60
-        mqtt!.delegate = self
-        mqtt!.enableSSL = true
-    }
-    
-    func selfSignedSSLSetting() {
-        let clientID = "CocoaMQTT-" + String(ProcessInfo().processIdentifier)
-        mqtt = CocoaMQTT(clientID: clientID, host: defaultHost, port: 8883)
-        mqtt!.username = ""
-        mqtt!.password = ""
-        mqtt!.willMessage = CocoaMQTTMessage(topic: "/will", string: "dieout")
-        mqtt!.keepAlive = 60
-        mqtt!.delegate = self
-        mqtt!.enableSSL = true
-        mqtt!.allowUntrustCACertificate = true
-        
-        let clientCertArray = getClientCertFromP12File(certName: "client-keycert", certPassword: "MySecretPassword")
-        
-        var sslSettings: [String: NSObject] = [:]
-        sslSettings[kCFStreamSSLCertificates as String] = clientCertArray
-        
-        mqtt!.sslSettings = sslSettings
-    }
-    
     func getClientCertFromP12File(certName: String, certPassword: String) -> CFArray? {
         // get p12 file path
         let resourcePath = Bundle.main.path(forResource: certName, ofType: "p12")
