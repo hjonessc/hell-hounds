@@ -1,6 +1,6 @@
 # Project state
 
-_Last updated: 2026-10-26 (session 2)_
+_Last updated: 2026-10-26 (session 3)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
@@ -14,7 +14,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 ## Current phase
 
 **Phase 1 — Restructure + simulator: done (session 2).**
-**Phase 2 — MQTT layer + package review: not started.**
+**Phase 2 — MQTT layer + package review: in progress (session 3).**
 
 ## Done
 
@@ -39,6 +39,10 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   `hound-sim`, shows the 4 hounds, and the sim logged a switch (`set-state 1`),
   a slider (`set-level 14`) and the Master switch (`set-state 0` to all four).
   **Phase 1 done.**
+- **Session 3 (2026-10-26):** Phase 2 step 1 — researched MQTT libraries and
+  wrote [ADR 0002](decisions/0002-mqtt-client-library.md) (**proposed**):
+  switch to MQTTNIO 3 (pin `3.0.0-rc.1`) behind our own `MQTTTransport`
+  protocol, with CocoaMQTT 2.4.1 as the fallback.
 
 ## Phased plan
 
@@ -138,11 +142,14 @@ protocol.
 
 ## Next steps
 
-1. Phase 2: research CocoaMQTT 2.x vs. alternatives (e.g. MQTTNIO) for iOS 26
-   and Swift 6 concurrency, and write ADR 0002.
-2. Then pull a transport protocol and an `@Observable` device model out of
-   `ViewController.swift`, add an in-app fake transport, and add unit tests
-   for the status / set-state / set-level round trip (`xcodebuild test`).
+1. User reviews ADR 0002; mark it accepted (or change course).
+2. Define `MQTTTransport` and an `@Observable` device model; move the
+   protocol code out of `ViewController.swift` (fix the `ledLvl`/`battery`
+   force-unwrap and delete the unused `.p12` loader on the way).
+3. Write the MQTTNIO adapter (reconnect loop driven by scene phase), swap the
+   package, and check against `hound-sim`.
+4. Add the in-app fake transport and unit tests for the status / set-state /
+   set-level round trip (`xcodebuild test`).
 
 Notes for later phases:
 - Bundle ID is still `io.henryerinjones.ChatExample` (kept so existing installs
