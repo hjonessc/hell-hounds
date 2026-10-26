@@ -129,7 +129,12 @@ protocol.
 
 ## Known issues
 
-_None yet._
+- The old app crashes on a `status-json` missing `ledLvl` or `battery` (force
+  unwrap in `ViewController.swift`); fix when the model moves out in Phase 2.
+- Testing tip: in the iOS Simulator tool a tap doesn't toggle a `UISwitch`;
+  drag the thumb instead (sliders need a drag too, and send on release).
+- `hound-sim` on the default prefix also controls any real hounds that are on;
+  `check_sim.py` uses a random prefix and is safe.
 
 ## Next steps
 
