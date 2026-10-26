@@ -14,7 +14,8 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 ## Current phase
 
 **Phase 1 — Restructure + simulator: done (session 2).**
-**Phase 2 — MQTT layer + package review: in progress (session 3).**
+**Phase 2 — MQTT layer + package review: done (session 3).**
+**Phase 3 — SwiftUI rewrite: not started.**
 
 ## Done
 
@@ -65,6 +66,17 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   **real hound 1 was live** and got test commands; it was turned back off
   (`set-state 0`, confirmed by its status). Its level is still 81 from a test;
   the original level isn't known. See PROTOCOL.md "Seen from a real hound".
+  Phase 2 step 4 — `FakeMQTTTransport` in the app (in-process hounds that
+  answer like the real firmware: boolean `ledState`, status after a poll and
+  after every command, `reportsStatusAfterCommands` to switch that off for
+  Q2), a `HellHoundsTests` unit-test target (Swift Testing, hosted by the
+  app) and a shared `HellHounds` scheme. 25 tests: protocol topics/payloads,
+  status parsing, topic-filter matching, and `HoundStore` round trips
+  (status, set-state, set-level, master, drop + reconnect, poll-only
+  hounds). Swapping the on/off payload makes 11 of them fail, as it should.
+  The app uses the fake transport when hosting tests or launched with
+  `-useFakeTransport YES`; the test run made no network connections.
+  **Phase 2 done.**
 
 ## Phased plan
 
@@ -162,18 +174,29 @@ protocol.
 - Screenshot checks by the image inspector can be wrong (it reported dimmed
   cards that weren't). Confirm UI state with a pixel measurement or the
   sim/broker log before acting on it.
+- `-useFakeTransport YES` was checked only through the unit-test host, not
+  by launching the app with it.
 - Testing tip: in the iOS Simulator tool a tap doesn't toggle a `UISwitch`;
   drag the thumb instead (sliders need a drag too, and send on release).
 - `check_sim.py` uses a random prefix and is safe.
 
 ## Next steps
 
-1. Phase 2 step 4: add a test target, an in-app fake transport, and unit tests
-   for the status / set-state / set-level round trip (`xcodebuild test`).
-   `HoundStore` takes `statusPollDelay`, so tests can set it to zero. Include
-   `HoundStatus` parsing cases: bool and int `ledState`, escaped JSON, and
-   missing fields.
-2. Then Phase 2 is done; move to 3.0.0 when MQTTNIO tags it (separate commit).
+1. Phase 3 (SwiftUI rewrite): device list with wildcard discovery
+   (`HellHounds-MQTT/+/status-json`; the fake already matches `+`), master
+   control, new battery indicator, broker settings, Liquid Glass tab bar,
+   proper scrolling. Done when a UI test on the fake transport passes with
+   6 devices and the app works against `hound-sim` on the local broker,
+   including a 5th device appearing without code changes.
+2. Move MQTTNIO to 3.0.0 when it's tagged (separate commit).
+
+Running the tests (use the simulator's ID; matching by name didn't resolve
+here, and without `-collect-test-diagnostics never` a failing run waits
+600 s gathering simulator diagnostics):
+
+```bash
+xcodebuild test -project HellHounds.xcodeproj -scheme HellHounds -destination "platform=iOS Simulator,id=$(xcrun simctl list devices booted | grep -oE '[0-9A-F-]{36}' | head -1)" -collect-test-diagnostics never
+```
 
 Notes for later phases:
 - Bundle ID is still `io.henryerinjones.ChatExample` (kept so existing installs
