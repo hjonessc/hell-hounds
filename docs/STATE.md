@@ -13,7 +13,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 ## Current phase
 
-**Phase 1 — Restructure + simulator: in progress (step 1 of 5 done).**
+**Phase 1 — Restructure + simulator: in progress (steps 1–2 of 5 done).**
 
 ## Done
 
@@ -21,6 +21,8 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 - **Session 2 (2026-10-25):** Phase 1 step 1 — wrote [PROTOCOL.md](PROTOCOL.md).
   Correction: on the wire `"1"` = LED on and `"0"` = off. ADR 0001 got this
   backwards from the misnamed constants `kMqttLedOn`/`kMqttLedOff`.
+  Phase 1 step 2 — wrote [`tools/hound-sim/`](../tools/hound-sim/README.md)
+  (simulator plus `check_sim.py` smoke test, passing against the public broker).
 
 ## Phased plan
 
@@ -30,9 +32,7 @@ Thinnest end-to-end slice: the existing app at the repo root, dead code gone,
 the protocol written down, and fake hounds to talk to.
 
 1. ~~Write `docs/PROTOCOL.md`~~ — done (session 2).
-2. Write `tools/hound-sim/` — a Python (paho-mqtt) script simulating N hounds
-   on a configurable broker/prefix, answering polls and commands, printing
-   every state change.
+2. ~~Write `tools/hound-sim/`~~ — done (session 2).
 3. Create a new top-level Xcode project (`HellHounds.xcodeproj`, Swift,
    iOS 26) and move `ViewController.swift`, `BatteryView.swift`,
    `AppDelegate.swift`, `Main.storyboard`, `LaunchScreen.storyboard` and the
@@ -119,7 +119,6 @@ _None yet._
 
 ## Next steps
 
-1. Phase 1 step 2: write `tools/hound-sim/` against [PROTOCOL.md](PROTOCOL.md).
-   Until Q2 is answered, the sim should send `status-json` after every
-   command as well as when polled, so the old app (which polls only once)
-   shows changes.
+1. Phase 1 step 3: create the top-level `HellHounds.xcodeproj` (iOS 26), move
+   the existing Swift files, storyboards and app icon in, and add CocoaMQTT via
+   SPM.
