@@ -1,6 +1,6 @@
 # Project state
 
-_Last updated: 2026-10-26 (session 3)_
+_Last updated: 2026-10-26 (session 4)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
@@ -15,7 +15,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 **Phase 1 — Restructure + simulator: done (session 2).**
 **Phase 2 — MQTT layer + package review: done (session 3).**
-**Phase 3 — SwiftUI rewrite: not started.**
+**Phase 3 — SwiftUI rewrite: in progress (session 4, step 1 of 6 done).**
 
 ## Done
 
@@ -77,6 +77,19 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   The app uses the fake transport when hosting tests or launched with
   `-useFakeTransport YES`; the test run made no network connections.
   **Phase 2 done.**
+- **Session 4 (2026-10-26):** Phase 3 step 1 — the app is SwiftUI now:
+  `HellHoundsApp` owns the `HoundStore`, connects when the scene is active
+  and disconnects in the background (`scenePhase`); `TransportFactory` keeps
+  the launch-argument rules. An interim plain `HoundListView` (master row plus
+  one row per hound; slider sends on release). Deleted the storyboards,
+  `AppDelegate`, `ViewController`, the UIKit `BatteryView` and every image
+  set except the app icon; generated launch screen and scene manifest.
+  Swift 6 language mode on for both targets (no warnings). 25 tests pass.
+  Checked `-useFakeTransport YES` (4 hounds, batteries 100/70/40/10) and,
+  on local Mosquitto with `hound-sim --escaped`: slider (`set-level 84`),
+  a switch (`set-state 0`), master switch (`set-state 1` to all four), the
+  rows matching the returned status (pixel check), and a disconnect in the
+  background with reconnect and re-poll on return.
 
 ## Phased plan
 
@@ -113,6 +126,20 @@ the status / set-state / set-level round trip and pass with `xcodebuild test`.
 
 Device list with wildcard discovery, master control, a new battery indicator,
 broker settings, Liquid Glass tab bar and styling, proper scrolling.
+
+1. ~~SwiftUI `App` + interim list; UIKit, storyboards and old assets gone; Swift 6 mode~~ — done (session 4).
+2. Discovery in `HoundStore`: subscribe to `HellHounds-MQTT/+/status-json`,
+   `hounds` starts empty, add a hound the first time its index reports; on
+   connect poll the known indices plus a probe range 0..<8 (Q2). Update
+   `HoundStoreTests`; test a 5th/6th hound, an out-of-range self-reporter
+   and malformed topics.
+3. Device list (cards, master on top, connection banner) and a SwiftUI
+   battery indicator.
+4. Settings tab (broker host/port in `@AppStorage`, launch args override,
+   rebuild the transport on change); `TabView` with Liquid Glass; styling
+   (keep the dark blood-red cards).
+5. UI test target: 6 fake hounds, scroll to the 6th, toggle it.
+6. Manual check on local Mosquitto with `hound-sim -n 5`; update STATE.
 
 **Done when:** a UI test on the fake transport passes with 6 devices (more than
 fit on screen), and the app works against `hound-sim`, including a 5th device
@@ -181,23 +208,17 @@ protocol.
 - Screenshot checks by the image inspector can be wrong (it reported dimmed
   cards that weren't). Confirm UI state with a pixel measurement or the
   sim/broker log before acting on it.
-- `-useFakeTransport YES` was checked only through the unit-test host, not
-  by launching the app with it.
-- Testing tip: in the iOS Simulator tool a tap doesn't toggle a `UISwitch`;
-  drag the thumb instead (sliders need a drag too, and send on release).
+- Testing tip: in the iOS Simulator tool a tap doesn't flip a switch; drag
+  the thumb with `duration` ≥ 0.5 s (a quick 0.3 s drag was ignored once).
+  Sliders need a drag too and send on release. Launch with
+  `xcrun simctl launch <id> io.henryerinjones.ChatExample -mqttHost localhost`.
 - `check_sim.py` uses a random prefix and is safe.
 
 ## Next steps
 
-1. **Start Phase 3 (SwiftUI rewrite)** with a short plan: replace the
-   storyboard, `AppDelegate` and `ViewController` with a SwiftUI `App` that
-   owns a `HoundStore` (it's already `@Observable`; keep
-   `ViewController.makeTransport()`'s launch-argument rules). Then make
-   `HoundStore` discover hounds: subscribe to `HellHounds-MQTT/+/status-json`
-   and add a hound the first time an index reports, instead of the fixed
-   0..<4 (the fake transport already matches `+`; `HoundStoreTests` will need
-   updating). Then the device list, master control, new battery indicator,
-   broker settings, Liquid Glass tab bar and scrolling.
+1. **Phase 3 step 2: discovery in `HoundStore`** (see the Phase 3 plan above).
+   The fake transport already matches `+`; give it a hound count for 6+ hounds.
+   Then steps 3–6.
    **Done when** a UI test on the fake transport passes with 6 devices and the
    app works against `hound-sim` on the local broker, including a 5th device
    (`hound-sim -n 5`) appearing without code changes.
@@ -218,9 +239,6 @@ xcodebuild test -project HellHounds.xcodeproj -scheme HellHounds -destination "p
 Notes for later phases:
 - Bundle ID is still `io.henryerinjones.ChatExample` (kept so existing installs
   update in place); change it in Phase 6.
-- The storyboard still has the CocoaMQTT example's chat tabs
-  (`ChatViewController` etc., classes that don't exist); `viewDidLoad` removes
-  them at runtime. They go away with the Phase 3 rewrite.
 - Real hounds also publish `status` and `BatStats` (voltage and current);
   the Phase 3 battery indicator could use them (PROTOCOL.md).
 - The project was generated once with XcodeGen and is now edited in Xcode
