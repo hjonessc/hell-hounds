@@ -12,8 +12,10 @@ uv run tools/hound-sim/hound_sim.py
 ```
 
 By default this runs 4 hounds (indices 0–3) on `broker.hivemq.com` with
-prefix `HellHounds-MQTT`, the same as the app. **If the real hounds are on,
-they get the same commands.** Pass `--prefix` to keep them apart.
+prefix `HellHounds-MQTT`, the same as the app. **Real hounds are live on that
+broker and get the same commands** (seen 2026-10-26). Use a local broker
+(below) whenever the app is involved; `--prefix` alone doesn't help because the
+app's prefix is fixed.
 
 | Option | Effect |
 |---|---|
@@ -27,6 +29,27 @@ The hounds start off at level 50, with batteries spread from 100% down to 10%
 so the low-battery state shows up. Without `--poll-only`, each hound sends its
 status when it connects and after every change, so the old app (which polls
 only once) still shows updates.
+
+## Local broker (use this for app testing)
+
+Real hounds are live on the public broker, so test the app against a local
+one. Needs Docker Desktop running:
+
+```bash
+docker run --rm -d --name hh-mosquitto -p 1883:1883 eclipse-mosquitto:2 mosquitto -c /mosquitto-no-auth.conf
+```
+
+```bash
+uv run tools/hound-sim/hound_sim.py --host localhost
+```
+
+Then launch the app with `-mqttHost localhost` (and `-mqttPort <port>` if the
+broker isn't on 1883). In Xcode, add it under Scheme › Run › Arguments; from
+the shell:
+
+```bash
+xcrun simctl launch booted io.henryerinjones.ChatExample -mqttHost localhost
+```
 
 ## Smoke test
 

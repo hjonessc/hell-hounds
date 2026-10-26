@@ -17,7 +17,12 @@ struct HoundCard {
 }
 
 class ViewController: UIViewController {
-    let store = HoundStore(transport: CocoaMQTTTransport())
+    // For testing, launch with `-mqttHost localhost` (and optionally `-mqttPort 1884`),
+    // read through UserDefaults, to use a local broker.
+    let store = HoundStore(transport: MQTTNIOTransport(
+        host: UserDefaults.standard.string(forKey: "mqttHost") ?? "broker.hivemq.com",
+        port: UserDefaults.standard.integer(forKey: "mqttPort").nonZero ?? 1883
+    ))
 
     @IBOutlet weak var connectButton: UIButton!
 
@@ -179,6 +184,17 @@ class ViewController: UIViewController {
             tabBarController.viewControllers = viewControllers
         }
 
+        // Stay connected only while in the foreground; the transport reconnects on its own in between.
+        NotificationCenter.default.addObserver(self, selector: #selector(appDidEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
+        store.connect()
+    }
+
+    @objc func appDidEnterBackground() {
+        store.disconnect()
+    }
+
+    @objc func appWillEnterForeground() {
         store.connect()
     }
 
@@ -216,4 +232,8 @@ extension ViewController: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
         return viewController != tabBarController.selectedViewController
     }
+}
+
+private extension Int {
+    var nonZero: Int? { self == 0 ? nil : self }
 }

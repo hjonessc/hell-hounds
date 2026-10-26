@@ -52,6 +52,19 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   4 hounds with the right batteries, a switch (`set-state 1`), a slider
   (`set-level 92`), the Master slider (`set-level 81` to all four) and the Master
   switch (`set-state 0` to all four), with the cards updating from the returned status.
+  Phase 2 step 3 — `MQTTNIOTransport` (MQTTNIO `3.0.0-rc.1` plus `NIOCore` /
+  `NIOTransportServices`; CocoaMQTT package and adapter removed; reconnect
+  loop with 1–30 s backoff; disconnect on background, reconnect on
+  foreground). The app takes `-mqttHost` / `-mqttPort` launch arguments for a
+  local broker (see `tools/hound-sim/README.md`). Checked on local Mosquitto
+  with `hound-sim --escaped`: 4 hounds, switch (`set-state 1`), slider
+  (`set-level 88`), Master switch (`set-state 0` to all four), reconnect after
+  a broker restart and after a trip to the background, plus a 150 ms delay
+  proxy. A "subscription bug" reported mid-session was a misread screenshot
+  (pixel check: no card was ever dimmed). While testing on the public broker a
+  **real hound 1 was live** and got test commands; it was turned back off
+  (`set-state 0`, confirmed by its status). Its level is still 81 from a test;
+  the original level isn't known. See PROTOCOL.md "Seen from a real hound".
 
 ## Phased plan
 
@@ -128,7 +141,8 @@ protocol.
 - **Q1** (blocks Phase 7): What can the firmware do? Waiting on the device
   code; assumed to be based on the board's MQTT sample code.
 - **Q2** (affects Phase 3): Do devices publish status on their own, or only in
-  response to `msg`? Today the app polls each index. If poll-only, discovery
+  response to `msg`? Partly answered 2026-10-26: a real hound published
+  `status-json` (plus `status` and `BatStats`) right after `set-state`. Today the app polls each index. If poll-only, discovery
   falls back to probing indices 0..N.
 - **Q3** (blocks Phase 7): Move to a private / authenticated broker?
 - **Q4** (blocks iCloud in Phase 4, and Phase 6): When to pay for the Apple
@@ -142,19 +156,24 @@ protocol.
 
 ## Known issues
 
+- **Real hounds are live on the public broker** (index 1 at least, 2026-10-26).
+  Never drive the app or `hound-sim` on the public broker for testing; use
+  local Mosquitto (`tools/hound-sim/README.md`).
+- Screenshot checks by the image inspector can be wrong (it reported dimmed
+  cards that weren't). Confirm UI state with a pixel measurement or the
+  sim/broker log before acting on it.
 - Testing tip: in the iOS Simulator tool a tap doesn't toggle a `UISwitch`;
   drag the thumb instead (sliders need a drag too, and send on release).
-- `hound-sim` on the default prefix also controls any real hounds that are on;
-  `check_sim.py` uses a random prefix and is safe.
+- `check_sim.py` uses a random prefix and is safe.
 
 ## Next steps
 
-1. Phase 2 step 3: write `MQTTNIOTransport` (MQTTNIO `3.0.0-rc.1` pinned exactly,
-   a reconnect loop with backoff driven by scene phase), swap it in, drop the
-   CocoaMQTT package unless we keep it as the fallback, and check against `hound-sim`.
-2. Phase 2 step 4: add a test target, an in-app fake transport, and unit tests
+1. Phase 2 step 4: add a test target, an in-app fake transport, and unit tests
    for the status / set-state / set-level round trip (`xcodebuild test`).
-   `HoundStore` takes `statusPollDelay`, so tests can set it to zero.
+   `HoundStore` takes `statusPollDelay`, so tests can set it to zero. Include
+   `HoundStatus` parsing cases: bool and int `ledState`, escaped JSON, and
+   missing fields.
+2. Then Phase 2 is done; move to 3.0.0 when MQTTNIO tags it (separate commit).
 
 Notes for later phases:
 - Bundle ID is still `io.henryerinjones.ChatExample` (kept so existing installs

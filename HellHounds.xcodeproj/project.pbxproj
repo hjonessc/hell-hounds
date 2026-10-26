@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		9CA4FF4576665093245EF07A /* CocoaMQTT in Frameworks */ = {isa = PBXBuildFile; productRef = B5646B1BFE1E04E19261DD0C /* CocoaMQTT */; };
+		A1D0C0DE0000000000000021 /* MQTTNIO in Frameworks */ = {isa = PBXBuildFile; productRef = A1D0C0DE0000000000000011 /* MQTTNIO */; };
+		A1D0C0DE0000000000000022 /* NIOCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1D0C0DE0000000000000012 /* NIOCore */; };
+		A1D0C0DE0000000000000023 /* NIOTransportServices in Frameworks */ = {isa = PBXBuildFile; productRef = A1D0C0DE0000000000000013 /* NIOTransportServices */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,7 +33,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9CA4FF4576665093245EF07A /* CocoaMQTT in Frameworks */,
+				A1D0C0DE0000000000000021 /* MQTTNIO in Frameworks */,
+				A1D0C0DE0000000000000022 /* NIOCore in Frameworks */,
+				A1D0C0DE0000000000000023 /* NIOTransportServices in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,7 +78,9 @@
 			);
 			name = HellHounds;
 			packageProductDependencies = (
-				B5646B1BFE1E04E19261DD0C /* CocoaMQTT */,
+				A1D0C0DE0000000000000011 /* MQTTNIO */,
+				A1D0C0DE0000000000000012 /* NIOCore */,
+				A1D0C0DE0000000000000013 /* NIOTransportServices */,
 			);
 			productName = HellHounds;
 			productReference = 9BD44D72C41EFAD2D92A9F49 /* HellHounds.app */;
@@ -105,7 +111,9 @@
 			mainGroup = 8B74B24B6F8B0A3DF2CDBC65;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				20537C8074AEB7F0605AEEEA /* XCRemoteSwiftPackageReference "CocoaMQTT" */,
+				A1D0C0DE0000000000000001 /* XCRemoteSwiftPackageReference "mqtt-nio" */,
+				A1D0C0DE0000000000000002 /* XCRemoteSwiftPackageReference "swift-nio" */,
+				A1D0C0DE0000000000000003 /* XCRemoteSwiftPackageReference "swift-nio-transport-services" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 38B1436AAAE91D21D599D332 /* Products */;
@@ -331,21 +339,47 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		20537C8074AEB7F0605AEEEA /* XCRemoteSwiftPackageReference "CocoaMQTT" */ = {
+		A1D0C0DE0000000000000001 /* XCRemoteSwiftPackageReference "mqtt-nio" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/emqx/CocoaMQTT.git";
+			repositoryURL = "https://github.com/swift-server-community/mqtt-nio.git";
 			requirement = {
 				kind = exactVersion;
-				version = 2.1.6;
+				version = "3.0.0-rc.1";
+			};
+		};
+		A1D0C0DE0000000000000002 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.100.0;
+			};
+		};
+		A1D0C0DE0000000000000003 /* XCRemoteSwiftPackageReference "swift-nio-transport-services" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio-transport-services.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.26.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		B5646B1BFE1E04E19261DD0C /* CocoaMQTT */ = {
+		A1D0C0DE0000000000000011 /* MQTTNIO */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 20537C8074AEB7F0605AEEEA /* XCRemoteSwiftPackageReference "CocoaMQTT" */;
-			productName = CocoaMQTT;
+			package = A1D0C0DE0000000000000001 /* XCRemoteSwiftPackageReference "mqtt-nio" */;
+			productName = MQTTNIO;
+		};
+		A1D0C0DE0000000000000012 /* NIOCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1D0C0DE0000000000000002 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOCore;
+		};
+		A1D0C0DE0000000000000013 /* NIOTransportServices */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1D0C0DE0000000000000003 /* XCRemoteSwiftPackageReference "swift-nio-transport-services" */;
+			productName = NIOTransportServices;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

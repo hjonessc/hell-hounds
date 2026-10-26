@@ -58,8 +58,13 @@ final class HoundStore {
     // MARK: - Commands
 
     func connect() {
+        guard connectionState == .disconnected else { return }
         connectionState = .connecting
         transport.connect()
+    }
+
+    func disconnect() {
+        transport.disconnect()
     }
 
     func setOn(_ isOn: Bool, houndIndex: Int) {

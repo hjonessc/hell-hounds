@@ -61,7 +61,8 @@ after 3.0 ships, and its transport (CocoaAsyncSocket) is frozen.
   turn on Swift 6 language mode once `ViewController` is gone (Phase 3).
 - We depend on a release candidate until 3.0.0 is tagged. The API may still
   change slightly before then. Only the adapter is affected.
-- The package graph grows from 3 to about 10 packages, and the binary probably gets
+- The package graph grows from 3 to 21 packages once resolved (swift-crypto,
+  swift-certificates, swift-nio-http2 and others come in transitively; checked 2026-10-26), and the binary probably gets
   a few MB bigger because of SwiftNIO (not measured). That's fine for a hobby app; measure it
   again before TestFlight (Phase 6).
 - Reconnect logic is ours to write and test. The fake transport and
