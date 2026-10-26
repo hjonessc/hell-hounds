@@ -1,6 +1,6 @@
 # Project state
 
-_Last updated: 2026-10-25 (session 2)_
+_Last updated: 2026-10-26 (session 2)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
@@ -13,7 +13,8 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 ## Current phase
 
-**Phase 1 — Restructure + simulator: in progress (steps 1–4 of 5 done).**
+**Phase 1 — Restructure + simulator: done (session 2).**
+**Phase 2 — MQTT layer + package review: not started.**
 
 ## Done
 
@@ -34,6 +35,10 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   library, BatteryView source, Podfile, old project, `client-keycert.p12`) and
   `Assets/` (copies of the app icon and unused source images). Fixed a startup
   race in `check_sim.py` (it now polls until the sim answers).
+  Phase 1 step 5 — a fresh clone of `f8d6d1b` builds; its app, run against
+  `hound-sim`, shows the 4 hounds, and the sim logged a switch (`set-state 1`),
+  a slider (`set-level 14`) and the Master switch (`set-state 0` to all four).
+  **Phase 1 done.**
 
 ## Phased plan
 
@@ -46,7 +51,7 @@ the protocol written down, and fake hounds to talk to.
 2. ~~Write `tools/hound-sim/`~~ — done (session 2).
 3. ~~Create the top-level Xcode project and move the app in~~ — done (session 2).
 4. ~~Delete the leftovers~~ — done (session 2).
-5. Build, run in Simulator, connect, check against `hound-sim`.
+5. ~~Build from a clean clone and check against `hound-sim`~~ — done (session 2).
 
 **Done when:** a clean clone builds the top-level project in Xcode; the
 unchanged UI connects to the broker, shows 4 simulated hounds from the
@@ -128,9 +133,11 @@ _None yet._
 
 ## Next steps
 
-1. Phase 1 step 5: build from a clean clone, then run in Simulator against
-   `hound-sim` (already done once from this checkout in session 2) and mark
-   Phase 1 done.
+1. Phase 2: research CocoaMQTT 2.x vs. alternatives (e.g. MQTTNIO) for iOS 26
+   and Swift 6 concurrency, and write ADR 0002.
+2. Then pull a transport protocol and an `@Observable` device model out of
+   `ViewController.swift`, add an in-app fake transport, and add unit tests
+   for the status / set-state / set-level round trip (`xcodebuild test`).
 
 Notes for later phases:
 - Bundle ID is still `io.henryerinjones.ChatExample` (kept so existing installs
