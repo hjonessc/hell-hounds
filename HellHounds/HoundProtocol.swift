@@ -52,9 +52,25 @@ struct HoundStatus: Equatable {
     var battery: Int?
 
     private struct Wire: Decodable {
-        var ledState: Int?
+        var ledState: Bool?
         var ledLvl: Int?
         var battery: Int?
+
+        private enum CodingKeys: String, CodingKey {
+            case ledState, ledLvl, battery
+        }
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            // The real firmware sends `true`/`false`; the sim and PROTOCOL.md use 1/0.
+            if let flag = try? container.decodeIfPresent(Bool.self, forKey: .ledState) {
+                ledState = flag
+            } else {
+                ledState = try container.decodeIfPresent(Int.self, forKey: .ledState).map { $0 == 1 }
+            }
+            ledLvl = try container.decodeIfPresent(Int.self, forKey: .ledLvl)
+            battery = try container.decodeIfPresent(Int.self, forKey: .battery)
+        }
     }
 
     /// Accepts plain JSON and the backslash-escaped JSON the firmware seems to send.
@@ -63,7 +79,7 @@ struct HoundStatus: Equatable {
         guard let wire = try? JSONDecoder().decode(Wire.self, from: Data(unescaped.utf8)) else {
             return nil
         }
-        isOn = wire.ledState == 1
+        isOn = wire.ledState ?? false
         brightness = wire.ledLvl
         battery = wire.battery
     }

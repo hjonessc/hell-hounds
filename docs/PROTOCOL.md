@@ -77,7 +77,7 @@ connection is accepted. It doesn't poll again after that.
 
 | Key | Type | Meaning |
 |---|---|---|
-| `ledState` | int | `1` = on, anything else = off |
+| `ledState` | bool or int | `true` / `1` = on, anything else = off (the real firmware sends a bool) |
 | `ledLvl` | int | brightness 0–100 |
 | `battery` | int | battery charge in percent, 0–100 (the app warns below 20) |
 
@@ -88,8 +88,8 @@ How the app parses it:
   `{\"ledState\":1,\"ledLvl\":42,\"battery\":87}`. A plain JSON payload
   works too. Senders (including the simulator) should send plain JSON, and
   receivers should accept both.
-- All values must be integers. A string or float value makes the parse fail
-  and the message is dropped.
+- `ledLvl` and `battery` must be integers; `ledState` may be a boolean or an
+  integer. Any other type makes the parse fail and the message is dropped.
 - A missing `ledState` is read as off. A missing `ledLvl` or `battery`
   leaves that value as it was (the 2019 app crashed here, as it did on an
   index above 3).
@@ -104,6 +104,22 @@ a `set-state` / `set-level`, on a timer, or at boot), or only when polled
 through `msg`. The old app gets later status only if the device sends it
 unprompted: it doesn't update its model from its own commands, and it polls
 only once.
+
+## Seen from a real hound (2026-10-26)
+
+A real hound with index 1 was on the public broker during testing. When it
+got `set-state 1`, it published, unprompted and within a second:
+
+| Topic | Payload |
+|---|---|
+| `HellHounds-MQTT/1/status-json` | `{"ledState":true,"ledLvl":81,"battery":90}`: **plain JSON with a boolean `ledState`**, not escaped and not `1`/`0` |
+| `HellHounds-MQTT/1/status` | `LED is: 1\nLVL is: 81\n` (text) |
+| `HellHounds-MQTT/1/BatStats` | ` SOC: 90 %\n4.00 V \| -79 mA\nTime: 155.45` (text: charge, voltage, current, and probably uptime in hours) |
+
+So the firmware sends status by itself after a command (at least after
+`set-state`), which partly answers Q2. Receivers must accept `ledState` as a
+boolean or as `1`/`0`; the app does now. `status` and `BatStats` aren't used
+yet. `BatStats` has voltage and current that the app could show later.
 
 ## Lifecycle
 
