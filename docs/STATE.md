@@ -4,7 +4,7 @@ _Last updated: 2026-10-25 (session 2)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
-2019-era storyboard app buried in `CocoaMQTT-master/Example/Example/`; this
+2019-era storyboard app (now at the repo root in `HellHounds/`); this
 project cleans it up, rewrites it in SwiftUI for iOS 26, and makes devices
 discoverable, nameable and mockable. Requirements and founding decisions:
 [ADR 0001](decisions/0001-hell-hounds-founding.md).
@@ -13,7 +13,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 ## Current phase
 
-**Phase 1 — Restructure + simulator: in progress (steps 1–3 of 5 done).**
+**Phase 1 — Restructure + simulator: in progress (steps 1–4 of 5 done).**
 
 ## Done
 
@@ -30,6 +30,10 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   passes; checked in Simulator against `hound-sim`: 4 hounds shown with
   the right batteries, the switch sends `set-state 1`, the slider sends
   `set-level`, and the switch and Master card update from the returned status.
+  Phase 1 step 4 — deleted `HellHoundsTests/`, `CocoaMQTT-master/` (vendored
+  library, BatteryView source, Podfile, old project, `client-keycert.p12`) and
+  `Assets/` (copies of the app icon and unused source images). Fixed a startup
+  race in `check_sim.py` (it now polls until the sim answers).
 
 ## Phased plan
 
@@ -41,9 +45,7 @@ the protocol written down, and fake hounds to talk to.
 1. ~~Write `docs/PROTOCOL.md`~~ — done (session 2).
 2. ~~Write `tools/hound-sim/`~~ — done (session 2).
 3. ~~Create the top-level Xcode project and move the app in~~ — done (session 2).
-4. Delete the Objective-C `HellHounds/`, `HellHoundsTests/`,
-   `CocoaMQTT-master/` (incl. `BatteryView-master/`, Podfile, workspaces) and
-   unused `Assets/` zips/images, and `client-keycert.p12` (Q6: not needed).
+4. ~~Delete the leftovers~~ — done (session 2).
 5. Build, run in Simulator, connect, check against `hound-sim`.
 
 **Done when:** a clean clone builds the top-level project in Xcode; the
@@ -126,10 +128,9 @@ _None yet._
 
 ## Next steps
 
-1. Phase 1 step 4: delete the rest — `HellHoundsTests/`, `CocoaMQTT-master/`
-   (its old `Hellhounds.xcodeproj` now points at moved files) and unused
-   `Assets/` files (incl. `client-keycert.p12`; Q6 answered).
-2. Phase 1 step 5: run in Simulator against `hound-sim`.
+1. Phase 1 step 5: build from a clean clone, then run in Simulator against
+   `hound-sim` (already done once from this checkout in session 2) and mark
+   Phase 1 done.
 
 Notes for later phases:
 - Bundle ID is still `io.henryerinjones.ChatExample` (kept so existing installs

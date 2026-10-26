@@ -77,8 +77,23 @@ def main() -> int:
     def poll(index: int) -> None:
         client.publish(f"{prefix}/{index}/msg", "0")
 
+    def wait_for_sim(timeout: float = 30) -> None:
+        """Poll hound 0 until it answers, so the sim has connected and subscribed."""
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            poll(0)
+            try:
+                statuses.get(timeout=1)
+            except queue.Empty:
+                continue
+            time.sleep(0.5)
+            while not statuses.empty():  # drop extra answers to earlier polls
+                statuses.get_nowait()
+            return
+        raise SystemExit("FAIL  simulator never answered")
+
     try:
-        time.sleep(3)  # let the sim connect and subscribe
+        wait_for_sim()
         for i in range(args.count):
             poll(i)
             expect(f"hound {i} answers poll", i, lambda s: set(s) == {"ledState", "ledLvl", "battery"})

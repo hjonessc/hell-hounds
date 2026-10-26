@@ -1,7 +1,7 @@
 # Hell Hounds MQTT protocol
 
 How the app and the hounds talk. Written from the 2019 app
-(`CocoaMQTT-master/Example/Example/ViewController.swift`). The firmware isn't
+(`HellHounds/ViewController.swift`). The firmware isn't
 available yet (Q1), so everything here comes from the app side; anything
 about device behaviour that the app doesn't show is marked **unverified**.
 
