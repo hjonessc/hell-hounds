@@ -101,6 +101,11 @@ ADR on keeping CocoaMQTT vs. alternatives (e.g. MQTTNIO). Extract a transport
 protocol and an `@Observable` device model out of the view controller; add an
 in-app fake transport.
 
+1. ~~ADR 0002 (MQTTNIO 3)~~ — done (session 3).
+2. ~~`MQTTTransport` + `@Observable HoundStore` out of the view controller~~ — done (session 3).
+3. ~~`MQTTNIOTransport` with reconnect; CocoaMQTT removed~~ — done (session 3).
+4. ~~Fake transport, test target, round-trip unit tests~~ — done (session 3).
+
 **Done when:** the ADR is written, and unit tests on the fake transport cover
 the status / set-state / set-level round trip and pass with `xcodebuild test`.
 
@@ -154,8 +159,9 @@ protocol.
   code; assumed to be based on the board's MQTT sample code.
 - **Q2** (affects Phase 3): Do devices publish status on their own, or only in
   response to `msg`? Partly answered 2026-10-26: a real hound published
-  `status-json` (plus `status` and `BatStats`) right after `set-state`. Today the app polls each index. If poll-only, discovery
-  falls back to probing indices 0..N.
+  `status-json` (plus `status` and `BatStats`) right after `set-state`. Still unknown: whether hounds report at boot or on a
+  timer. The app polls each known index once per connect; if hounds turn out
+  to be poll-only, discovery falls back to probing indices 0..N.
 - **Q3** (blocks Phase 7): Move to a private / authenticated broker?
 - **Q4** (blocks iCloud in Phase 4, and Phase 6): When to pay for the Apple
   Developer membership — user will pay once it becomes useful.
@@ -163,14 +169,15 @@ protocol.
 - ~~**Q6**~~ answered (session 2): `client-keycert.p12` is the CocoaMQTT
   example's sample client cert (`CN=MacBook-Air.local, O=client`, issued by
   `MyTestCA`, password `MySecretPassword`), committed with the vendored
-  library in 2019. Not secret, never loaded (the app uses plain TCP). Delete it
-  in step 4; no history rewrite needed.
+  library in 2019. Not secret, never loaded (the app uses plain TCP). Deleted
+  in Phase 1 step 4; no history rewrite needed.
 
 ## Known issues
 
 - **Real hounds are live on the public broker** (index 1 at least, 2026-10-26).
   Never drive the app or `hound-sim` on the public broker for testing; use
-  local Mosquitto (`tools/hound-sim/README.md`).
+  local Mosquitto (`tools/hound-sim/README.md`). Real hound 1's level is
+  still 81 from a session 3 test; its earlier level isn't known.
 - Screenshot checks by the image inspector can be wrong (it reported dimmed
   cards that weren't). Confirm UI state with a pixel measurement or the
   sim/broker log before acting on it.
@@ -182,13 +189,23 @@ protocol.
 
 ## Next steps
 
-1. Phase 3 (SwiftUI rewrite): device list with wildcard discovery
-   (`HellHounds-MQTT/+/status-json`; the fake already matches `+`), master
-   control, new battery indicator, broker settings, Liquid Glass tab bar,
-   proper scrolling. Done when a UI test on the fake transport passes with
-   6 devices and the app works against `hound-sim` on the local broker,
-   including a 5th device appearing without code changes.
-2. Move MQTTNIO to 3.0.0 when it's tagged (separate commit).
+1. **Start Phase 3 (SwiftUI rewrite)** with a short plan: replace the
+   storyboard, `AppDelegate` and `ViewController` with a SwiftUI `App` that
+   owns a `HoundStore` (it's already `@Observable`; keep
+   `ViewController.makeTransport()`'s launch-argument rules). Then make
+   `HoundStore` discover hounds: subscribe to `HellHounds-MQTT/+/status-json`
+   and add a hound the first time an index reports, instead of the fixed
+   0..<4 (the fake transport already matches `+`; `HoundStoreTests` will need
+   updating). Then the device list, master control, new battery indicator,
+   broker settings, Liquid Glass tab bar and scrolling.
+   **Done when** a UI test on the fake transport passes with 6 devices and the
+   app works against `hound-sim` on the local broker, including a 5th device
+   (`hound-sim -n 5`) appearing without code changes.
+2. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
+
+Manual testing: start Docker Desktop, then the local broker and sim as in
+`tools/hound-sim/README.md`, and launch with `-mqttHost localhost`. Never on
+the public broker.
 
 Running the tests (use the simulator's ID; matching by name didn't resolve
 here, and without `-collect-test-diagnostics never` a failing run waits
@@ -204,5 +221,8 @@ Notes for later phases:
 - The storyboard still has the CocoaMQTT example's chat tabs
   (`ChatViewController` etc., classes that don't exist); `viewDidLoad` removes
   them at runtime. They go away with the Phase 3 rewrite.
-- The project was generated once with XcodeGen and is now edited in Xcode;
-  there's no `project.yml` to keep in sync.
+- Real hounds also publish `status` and `BatStats` (voltage and current);
+  the Phase 3 battery indicator could use them (PROTOCOL.md).
+- The project was generated once with XcodeGen and is now edited in Xcode
+  (session 3 added the test target and shared scheme by editing the project
+  file directly); there's no `project.yml` to keep in sync.
