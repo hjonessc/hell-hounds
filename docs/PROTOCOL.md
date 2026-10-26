@@ -114,7 +114,7 @@ got `set-state 1`, it published, unprompted and within a second:
 |---|---|
 | `HellHounds-MQTT/1/status-json` | `{"ledState":true,"ledLvl":81,"battery":90}`: **plain JSON with a boolean `ledState`**, not escaped and not `1`/`0` |
 | `HellHounds-MQTT/1/status` | `LED is: 1\nLVL is: 81\n` (text) |
-| `HellHounds-MQTT/1/BatStats` | ` SOC: 90 %\n4.00 V \| -79 mA\nTime: 155.45` (text: charge, voltage, current, and probably uptime in hours) |
+| `HellHounds-MQTT/1/BatStats` | ` SOC: 90 %\n4.00 V \| -79 mA\nTime: 155.45` (text: charge, voltage, current, and a `Time` value that isn't uptime: a second reading a few minutes later, after `set-state 0`, was `3.98 V | -285 mA`, `Time: 42.88`; maybe hours left at the present draw) |
 
 So the firmware sends status by itself after a command (at least after
 `set-state`), which partly answers Q2. Receivers must accept `ledState` as a
