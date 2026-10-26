@@ -13,7 +13,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 ## Current phase
 
-**Phase 1 — Restructure + simulator: in progress (steps 1–2 of 5 done).**
+**Phase 1 — Restructure + simulator: in progress (steps 1–3 of 5 done).**
 
 ## Done
 
@@ -23,6 +23,13 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   backwards from the misnamed constants `kMqttLedOn`/`kMqttLedOff`.
   Phase 1 step 2 — wrote [`tools/hound-sim/`](../tools/hound-sim/README.md)
   (simulator plus `check_sim.py` smoke test, passing against the public broker).
+  Phase 1 step 3 — new top-level `HellHounds.xcodeproj` (iOS 26, Swift 5 mode,
+  CocoaMQTT 2.1.6 via SPM, synchronized `HellHounds/` folder, generated
+  Info.plist); app files moved there with `git mv`. The Objective-C template
+  project had to go first because it used the same names. Simulator build
+  passes; checked in Simulator against `hound-sim`: 4 hounds shown with
+  the right batteries, the switch sends `set-state 1`, the slider sends
+  `set-level`, and the switch and Master card update from the returned status.
 
 ## Phased plan
 
@@ -33,13 +40,10 @@ the protocol written down, and fake hounds to talk to.
 
 1. ~~Write `docs/PROTOCOL.md`~~ — done (session 2).
 2. ~~Write `tools/hound-sim/`~~ — done (session 2).
-3. Create a new top-level Xcode project (`HellHounds.xcodeproj`, Swift,
-   iOS 26) and move `ViewController.swift`, `BatteryView.swift`,
-   `AppDelegate.swift`, `Main.storyboard`, `LaunchScreen.storyboard` and the
-   app icon from `Assets/` into it; add CocoaMQTT via SPM.
+3. ~~Create the top-level Xcode project and move the app in~~ — done (session 2).
 4. Delete the Objective-C `HellHounds/`, `HellHoundsTests/`,
    `CocoaMQTT-master/` (incl. `BatteryView-master/`, Podfile, workspaces) and
-   unused `Assets/` zips/images. Resolve Q6 for `client-keycert.p12`.
+   unused `Assets/` zips/images, and `client-keycert.p12` (Q6: not needed).
 5. Build, run in Simulator, connect, check against `hound-sim`.
 
 **Done when:** a clean clone builds the top-level project in Xcode; the
@@ -110,8 +114,11 @@ protocol.
 - **Q4** (blocks iCloud in Phase 4, and Phase 6): When to pay for the Apple
   Developer membership — user will pay once it becomes useful.
 - **Q5** (blocks Phase 8): KMP vs. separate Android app.
-- **Q6** (Phase 1): What is `CocoaMQTT-master/Example/Example/client-keycert.p12`
-  and is it secret? It's committed to git and the loader is never called.
+- ~~**Q6**~~ answered (session 2): `client-keycert.p12` is the CocoaMQTT
+  example's sample client cert (`CN=MacBook-Air.local, O=client`, issued by
+  `MyTestCA`, password `MySecretPassword`), committed with the vendored
+  library in 2019. Not secret, never loaded (the app uses plain TCP). Delete it
+  in step 4; no history rewrite needed.
 
 ## Known issues
 
@@ -119,6 +126,16 @@ _None yet._
 
 ## Next steps
 
-1. Phase 1 step 3: create the top-level `HellHounds.xcodeproj` (iOS 26), move
-   the existing Swift files, storyboards and app icon in, and add CocoaMQTT via
-   SPM.
+1. Phase 1 step 4: delete the rest — `HellHoundsTests/`, `CocoaMQTT-master/`
+   (its old `Hellhounds.xcodeproj` now points at moved files) and unused
+   `Assets/` files (incl. `client-keycert.p12`; Q6 answered).
+2. Phase 1 step 5: run in Simulator against `hound-sim`.
+
+Notes for later phases:
+- Bundle ID is still `io.henryerinjones.ChatExample` (kept so existing installs
+  update in place); change it in Phase 6.
+- The storyboard still has the CocoaMQTT example's chat tabs
+  (`ChatViewController` etc., classes that don't exist); `viewDidLoad` removes
+  them at runtime. They go away with the Phase 3 rewrite.
+- The project was generated once with XcodeGen and is now edited in Xcode;
+  there's no `project.yml` to keep in sync.

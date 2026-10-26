@@ -3,198 +3,122 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AF30749D23025730003C485F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AF30749C23025730003C485F /* AppDelegate.m */; };
-		AF3074A023025730003C485F /* FirstViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AF30749F23025730003C485F /* FirstViewController.m */; };
-		AF3074A323025730003C485F /* SecondViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AF3074A223025730003C485F /* SecondViewController.m */; };
-		AF3074A623025730003C485F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AF3074A423025730003C485F /* Main.storyboard */; };
-		AF3074A823025732003C485F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AF3074A723025732003C485F /* Assets.xcassets */; };
-		AF3074AB23025732003C485F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AF3074A923025732003C485F /* LaunchScreen.storyboard */; };
-		AF3074AE23025732003C485F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = AF3074AD23025732003C485F /* main.m */; };
-		AF3074B823025732003C485F /* HellHoundsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = AF3074B723025732003C485F /* HellHoundsTests.m */; };
+		9CA4FF4576665093245EF07A /* CocoaMQTT in Frameworks */ = {isa = PBXBuildFile; productRef = B5646B1BFE1E04E19261DD0C /* CocoaMQTT */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		AF3074B423025732003C485F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = AF30749023025730003C485F /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = AF30749723025730003C485F;
-			remoteInfo = HellHounds;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
-		AF30749823025730003C485F /* HellHounds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HellHounds.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		AF30749B23025730003C485F /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		AF30749C23025730003C485F /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		AF30749E23025730003C485F /* FirstViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FirstViewController.h; sourceTree = "<group>"; };
-		AF30749F23025730003C485F /* FirstViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FirstViewController.m; sourceTree = "<group>"; };
-		AF3074A123025730003C485F /* SecondViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SecondViewController.h; sourceTree = "<group>"; };
-		AF3074A223025730003C485F /* SecondViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SecondViewController.m; sourceTree = "<group>"; };
-		AF3074A523025730003C485F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		AF3074A723025732003C485F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		AF3074AA23025732003C485F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		AF3074AC23025732003C485F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AF3074AD23025732003C485F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		AF3074B323025732003C485F /* HellHoundsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HellHoundsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		AF3074B723025732003C485F /* HellHoundsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HellHoundsTests.m; sourceTree = "<group>"; };
-		AF3074B923025732003C485F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9BD44D72C41EFAD2D92A9F49 /* HellHounds.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HellHounds.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFrameworksBuildPhase section */
-		AF30749523025730003C485F /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		774BBF85559254791BA0D04D /* HellHounds */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
+			path = HellHounds;
+			sourceTree = "<group>";
 		};
-		AF3074B023025732003C485F /* Frameworks */ = {
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2ED009FCA938FF2A7559BED0 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9CA4FF4576665093245EF07A /* CocoaMQTT in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		AF30748F23025730003C485F = {
+		38B1436AAAE91D21D599D332 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AF30749A23025730003C485F /* HellHounds */,
-				AF3074B623025732003C485F /* HellHoundsTests */,
-				AF30749923025730003C485F /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		AF30749923025730003C485F /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				AF30749823025730003C485F /* HellHounds.app */,
-				AF3074B323025732003C485F /* HellHoundsTests.xctest */,
+				9BD44D72C41EFAD2D92A9F49 /* HellHounds.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		AF30749A23025730003C485F /* HellHounds */ = {
+		8B74B24B6F8B0A3DF2CDBC65 = {
 			isa = PBXGroup;
 			children = (
-				AF30749B23025730003C485F /* AppDelegate.h */,
-				AF30749C23025730003C485F /* AppDelegate.m */,
-				AF30749E23025730003C485F /* FirstViewController.h */,
-				AF30749F23025730003C485F /* FirstViewController.m */,
-				AF3074A123025730003C485F /* SecondViewController.h */,
-				AF3074A223025730003C485F /* SecondViewController.m */,
-				AF3074A423025730003C485F /* Main.storyboard */,
-				AF3074A723025732003C485F /* Assets.xcassets */,
-				AF3074A923025732003C485F /* LaunchScreen.storyboard */,
-				AF3074AC23025732003C485F /* Info.plist */,
-				AF3074AD23025732003C485F /* main.m */,
+				774BBF85559254791BA0D04D /* HellHounds */,
+				38B1436AAAE91D21D599D332 /* Products */,
 			);
-			path = HellHounds;
-			sourceTree = "<group>";
-		};
-		AF3074B623025732003C485F /* HellHoundsTests */ = {
-			isa = PBXGroup;
-			children = (
-				AF3074B723025732003C485F /* HellHoundsTests.m */,
-				AF3074B923025732003C485F /* Info.plist */,
-			);
-			path = HellHoundsTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AF30749723025730003C485F /* HellHounds */ = {
+		476A1638E37B23A4EB0A1F73 /* HellHounds */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AF3074BC23025732003C485F /* Build configuration list for PBXNativeTarget "HellHounds" */;
+			buildConfigurationList = AC80939F1EAA3332AD6F6B84 /* Build configuration list for PBXNativeTarget "HellHounds" */;
 			buildPhases = (
-				AF30749423025730003C485F /* Sources */,
-				AF30749523025730003C485F /* Frameworks */,
-				AF30749623025730003C485F /* Resources */,
+				EB4D7A95C1F8271C180990E5 /* Sources */,
+				A7BB8A331D3C6721449EE17B /* Resources */,
+				2ED009FCA938FF2A7559BED0 /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				774BBF85559254791BA0D04D /* HellHounds */,
 			);
 			name = HellHounds;
+			packageProductDependencies = (
+				B5646B1BFE1E04E19261DD0C /* CocoaMQTT */,
+			);
 			productName = HellHounds;
-			productReference = AF30749823025730003C485F /* HellHounds.app */;
+			productReference = 9BD44D72C41EFAD2D92A9F49 /* HellHounds.app */;
 			productType = "com.apple.product-type.application";
-		};
-		AF3074B223025732003C485F /* HellHoundsTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = AF3074BF23025732003C485F /* Build configuration list for PBXNativeTarget "HellHoundsTests" */;
-			buildPhases = (
-				AF3074AF23025732003C485F /* Sources */,
-				AF3074B023025732003C485F /* Frameworks */,
-				AF3074B123025732003C485F /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				AF3074B523025732003C485F /* PBXTargetDependency */,
-			);
-			name = HellHoundsTests;
-			productName = HellHoundsTests;
-			productReference = AF3074B323025732003C485F /* HellHoundsTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		AF30749023025730003C485F /* Project object */ = {
+		3D4CFE88C0B5B2BCB6949920 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1030;
-				ORGANIZATIONNAME = "Henry Jones";
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					AF30749723025730003C485F = {
-						CreatedOnToolsVersion = 10.3;
-					};
-					AF3074B223025732003C485F = {
-						CreatedOnToolsVersion = 10.3;
-						TestTargetID = AF30749723025730003C485F;
+					476A1638E37B23A4EB0A1F73 = {
+						DevelopmentTeam = K4BXBW45T2;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = AF30749323025730003C485F /* Build configuration list for PBXProject "HellHounds" */;
-			compatibilityVersion = "Xcode 9.3";
+			buildConfigurationList = F8770F0BE0C1454A997B4016 /* Build configuration list for PBXProject "HellHounds" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
+				en,
 			);
-			mainGroup = AF30748F23025730003C485F;
-			productRefGroup = AF30749923025730003C485F /* Products */;
+			mainGroup = 8B74B24B6F8B0A3DF2CDBC65;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				20537C8074AEB7F0605AEEEA /* XCRemoteSwiftPackageReference "CocoaMQTT" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 38B1436AAAE91D21D599D332 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				AF30749723025730003C485F /* HellHounds */,
-				AF3074B223025732003C485F /* HellHoundsTests */,
+				476A1638E37B23A4EB0A1F73 /* HellHounds */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		AF30749623025730003C485F /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				AF3074AB23025732003C485F /* LaunchScreen.storyboard in Resources */,
-				AF3074A823025732003C485F /* Assets.xcassets in Resources */,
-				AF3074A623025730003C485F /* Main.storyboard in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		AF3074B123025732003C485F /* Resources */ = {
+		A7BB8A331D3C6721449EE17B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -204,56 +128,42 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		AF30749423025730003C485F /* Sources */ = {
+		EB4D7A95C1F8271C180990E5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AF3074A323025730003C485F /* SecondViewController.m in Sources */,
-				AF30749D23025730003C485F /* AppDelegate.m in Sources */,
-				AF3074AE23025732003C485F /* main.m in Sources */,
-				AF3074A023025730003C485F /* FirstViewController.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		AF3074AF23025732003C485F /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				AF3074B823025732003C485F /* HellHoundsTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		AF3074B523025732003C485F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = AF30749723025730003C485F /* HellHounds */;
-			targetProxy = AF3074B423025732003C485F /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
-/* Begin PBXVariantGroup section */
-		AF3074A423025730003C485F /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				AF3074A523025730003C485F /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-		AF3074A923025732003C485F /* LaunchScreen.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				AF3074AA23025732003C485F /* Base */,
-			);
-			name = LaunchScreen.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
-
 /* Begin XCBuildConfiguration section */
-		AF3074BA23025732003C485F /* Debug */ = {
+		089599F49BF225463A3CE9E6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K4BXBW45T2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Hellhounds;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.henryerinjones.ChatExample;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		4079D58BBE5FA2759B8FB832 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -279,13 +189,13 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -295,8 +205,8 @@
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
 					"$(inherited)",
+					"DEBUG=1",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -304,15 +214,19 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
-		AF3074BB23025732003C485F /* Release */ = {
+		862B09E7939BEA48B765DFAA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -338,13 +252,13 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -357,117 +271,83 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				VALIDATE_PRODUCT = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
-		AF3074BD23025732003C485F /* Debug */ = {
+		B403993F8E75F7FD54288D8F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = K4BXBW45T2;
-				INFOPLIST_FILE = HellHounds/Info.plist;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Hellhounds;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.henry.HellHounds;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TARGETED_DEVICE_FAMILY = "1,2";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.henryerinjones.ChatExample;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
-		};
-		AF3074BE23025732003C485F /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = K4BXBW45T2;
-				INFOPLIST_FILE = HellHounds/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.henry.HellHounds;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		AF3074C023025732003C485F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = K4BXBW45T2;
-				INFOPLIST_FILE = HellHoundsTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.henry.HellHoundsTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HellHounds.app/HellHounds";
-			};
-			name = Debug;
-		};
-		AF3074C123025732003C485F /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = K4BXBW45T2;
-				INFOPLIST_FILE = HellHoundsTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.henry.HellHoundsTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HellHounds.app/HellHounds";
-			};
-			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AF30749323025730003C485F /* Build configuration list for PBXProject "HellHounds" */ = {
+		AC80939F1EAA3332AD6F6B84 /* Build configuration list for PBXNativeTarget "HellHounds" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				AF3074BA23025732003C485F /* Debug */,
-				AF3074BB23025732003C485F /* Release */,
+				B403993F8E75F7FD54288D8F /* Debug */,
+				089599F49BF225463A3CE9E6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		AF3074BC23025732003C485F /* Build configuration list for PBXNativeTarget "HellHounds" */ = {
+		F8770F0BE0C1454A997B4016 /* Build configuration list for PBXProject "HellHounds" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				AF3074BD23025732003C485F /* Debug */,
-				AF3074BE23025732003C485F /* Release */,
+				4079D58BBE5FA2759B8FB832 /* Debug */,
+				862B09E7939BEA48B765DFAA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		AF3074BF23025732003C485F /* Build configuration list for PBXNativeTarget "HellHoundsTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				AF3074C023025732003C485F /* Debug */,
-				AF3074C123025732003C485F /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		20537C8074AEB7F0605AEEEA /* XCRemoteSwiftPackageReference "CocoaMQTT" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/emqx/CocoaMQTT.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.1.6;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B5646B1BFE1E04E19261DD0C /* CocoaMQTT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 20537C8074AEB7F0605AEEEA /* XCRemoteSwiftPackageReference "CocoaMQTT" */;
+			productName = CocoaMQTT;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = AF30749023025730003C485F /* Project object */;
+	rootObject = 3D4CFE88C0B5B2BCB6949920 /* Project object */;
 }
