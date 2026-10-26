@@ -40,9 +40,18 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   a slider (`set-level 14`) and the Master switch (`set-state 0` to all four).
   **Phase 1 done.**
 - **Session 3 (2026-10-26):** Phase 2 step 1 — researched MQTT libraries and
-  wrote [ADR 0002](decisions/0002-mqtt-client-library.md) (**proposed**):
+  wrote [ADR 0002](decisions/0002-mqtt-client-library.md):
   switch to MQTTNIO 3 (pin `3.0.0-rc.1`) behind our own `MQTTTransport`
   protocol, with CocoaMQTT 2.4.1 as the fallback.
+  User accepted it. Phase 2 step 2 — pulled the protocol out of
+  `ViewController.swift`: `MQTTTransport` (events as an `AsyncStream`),
+  `HoundProtocol` (topics, payloads, tolerant `status-json` parsing),
+  `@Observable HoundStore`, and an interim `CocoaMQTTTransport` adapter. The
+  view controller now redraws through UIKit's `updateProperties()`
+  observation tracking. Checked in Simulator against `hound-sim --escaped`:
+  4 hounds with the right batteries, a switch (`set-state 1`), a slider
+  (`set-level 92`), the Master slider (`set-level 81` to all four) and the Master
+  switch (`set-state 0` to all four), with the cards updating from the returned status.
 
 ## Phased plan
 
@@ -133,8 +142,6 @@ protocol.
 
 ## Known issues
 
-- The old app crashes on a `status-json` missing `ledLvl` or `battery` (force
-  unwrap in `ViewController.swift`); fix when the model moves out in Phase 2.
 - Testing tip: in the iOS Simulator tool a tap doesn't toggle a `UISwitch`;
   drag the thumb instead (sliders need a drag too, and send on release).
 - `hound-sim` on the default prefix also controls any real hounds that are on;
@@ -142,14 +149,12 @@ protocol.
 
 ## Next steps
 
-1. User reviews ADR 0002; mark it accepted (or change course).
-2. Define `MQTTTransport` and an `@Observable` device model; move the
-   protocol code out of `ViewController.swift` (fix the `ledLvl`/`battery`
-   force-unwrap and delete the unused `.p12` loader on the way).
-3. Write the MQTTNIO adapter (reconnect loop driven by scene phase), swap the
-   package, and check against `hound-sim`.
-4. Add the in-app fake transport and unit tests for the status / set-state /
-   set-level round trip (`xcodebuild test`).
+1. Phase 2 step 3: write `MQTTNIOTransport` (MQTTNIO `3.0.0-rc.1` pinned exactly,
+   a reconnect loop with backoff driven by scene phase), swap it in, drop the
+   CocoaMQTT package unless we keep it as the fallback, and check against `hound-sim`.
+2. Phase 2 step 4: add a test target, an in-app fake transport, and unit tests
+   for the status / set-state / set-level round trip (`xcodebuild test`).
+   `HoundStore` takes `statusPollDelay`, so tests can set it to zero.
 
 Notes for later phases:
 - Bundle ID is still `io.henryerinjones.ChatExample` (kept so existing installs

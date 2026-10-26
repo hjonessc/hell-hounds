@@ -1,7 +1,7 @@
 # Hell Hounds MQTT protocol
 
-How the app and the hounds talk. Written from the 2019 app
-(`HellHounds/ViewController.swift`). The firmware isn't
+How the app and the hounds talk. Written from the 2019 app; the code now lives in
+`HellHounds/HoundProtocol.swift` and `HellHounds/HoundStore.swift`. The firmware isn't
 available yet (Q1), so everything here comes from the app side; anything
 about device behaviour that the app doesn't show is marked **unverified**.
 
@@ -90,10 +90,11 @@ How the app parses it:
   receivers should accept both.
 - All values must be integers. A string or float value makes the parse fail
   and the message is dropped.
-- A missing `ledLvl` or `battery` **crashes** the old app (force unwrap). A
-  missing `ledState` is read as off.
-- The index comes from the second part of the topic. If it isn't an integer,
-  the old app uses 0.
+- A missing `ledState` is read as off. A missing `ledLvl` or `battery`
+  leaves that value as it was (the 2019 app crashed here, as it did on an
+  index above 3).
+- The index comes from the second part of the topic. A message whose index
+  isn't an integer, or isn't a hound the app knows, is dropped.
 
 The app subscribes to `<prefix>/<index>/status-json` for indices 0–3, one
 topic each (no wildcard yet; ADR 0001 plans `<prefix>/+/status-json`).
@@ -132,4 +133,4 @@ Defined in the old code but never sent or subscribed to:
 - leaf `status` (`kTopicStatus`)
 - `HellHounds-MQTT$<leaf>`, an "all hounds" topic (`fullTopicForAllHounds`,
   no slash, never called)
-- client certificate `client-keycert.p12` (the loader is never called; Q6)
+- client certificate `client-keycert.p12` (deleted, along with its unused loader; Q6)

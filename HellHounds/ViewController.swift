@@ -7,43 +7,18 @@
 //
 
 import UIKit
-import CocoaMQTT
 
-struct Hellhound {
-    // UI Elements
+/// The storyboard controls for one hound card.
+struct HoundCard {
     var ledSwitch: UISwitch
     var ledSlider: UISlider
     var battery: BatteryView
     var view: UIView
-    // Values from MQTT
-    var isConnected: Bool = false
-    var isOn: Bool = false
-    var brightness: Float = 0
-    var batteryLevel: Int = 0
 }
 
 class ViewController: UIViewController {
-    let defaultHost      = "broker.hivemq.com"
-    let kTopicPrefix     = "HellHounds-MQTT"
-    let kTopicSetState   = "set-state"
-    let kTopicSetLevel   = "set-level"
-    let kTopicStatus     = "status"
-    let kTopicStatusJSON = "status-json"
-    let kTopicGetStatus  = "msg"
-    let kMqttLedOn       = "0"
-    let kMqttLedOff      = "1"
-    let kEmptyResponse   = "EMPTY_RESPONSE"
-    
-    let kNumHellhounds = 4
+    let store = HoundStore(transport: CocoaMQTTTransport())
 
-    enum ConnectionState {
-        case connected
-        case connecting
-        case disconnected
-    }
-
-    var mqtt: CocoaMQTT?
-    
     @IBOutlet weak var connectButton: UIButton!
 
     @IBOutlet weak var ledSwitch1: UISwitch!
@@ -63,7 +38,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var batteryMeter3: BatteryView!
     @IBOutlet weak var batteryMeterJack: BatteryView!
     @IBOutlet weak var batteryMeterMaster: BatteryView!
-    
+
     @IBOutlet weak var hellhoundView1: UIView!
     @IBOutlet weak var hellhoundView2: UIView!
     @IBOutlet weak var hellhoundView3: UIView!
@@ -114,30 +89,36 @@ class ViewController: UIViewController {
 
     // MARK: -
 
-    var hellhounds: [Hellhound] = []
-    var masterHellhound: Hellhound!
-    
-    func getHellhounds() -> [Hellhound] {
+    /// Card i shows hound index i; the switch and slider tags hold the same index.
+    var houndCards: [HoundCard] = []
+    var masterCard: HoundCard!
+
+    func getHoundCards() -> [HoundCard] {
         return [
-            Hellhound(ledSwitch: ledSwitch1, ledSlider: ledSlider1, battery: batteryMeter1, view: hellhoundView1),
-            Hellhound(ledSwitch: ledSwitch2, ledSlider: ledSlider2, battery: batteryMeter2, view: hellhoundView2),
-            Hellhound(ledSwitch: ledSwitch3, ledSlider: ledSlider3, battery: batteryMeter3, view: hellhoundView3),
-            Hellhound(ledSwitch: ledSwitchJack, ledSlider: ledSliderJack, battery: batteryMeterJack, view: hellhoundViewJack)
+            HoundCard(ledSwitch: ledSwitch1, ledSlider: ledSlider1, battery: batteryMeter1, view: hellhoundView1),
+            HoundCard(ledSwitch: ledSwitch2, ledSlider: ledSlider2, battery: batteryMeter2, view: hellhoundView2),
+            HoundCard(ledSwitch: ledSwitch3, ledSlider: ledSlider3, battery: batteryMeter3, view: hellhoundView3),
+            HoundCard(ledSwitch: ledSwitchJack, ledSlider: ledSliderJack, battery: batteryMeterJack, view: hellhoundViewJack)
         ]
     }
 
-    func getMasterHellhound() -> Hellhound {
-        return Hellhound(ledSwitch: ledSwitchMaster, ledSlider: ledSliderMaster, battery: batteryMeterMaster, view: hellhoundViewMaster)
+    func getMasterCard() -> HoundCard {
+        return HoundCard(ledSwitch: ledSwitchMaster, ledSlider: ledSliderMaster, battery: batteryMeterMaster, view: hellhoundViewMaster)
     }
 
-    var connectionState: ConnectionState = .disconnected {
-        didSet {
-        print("Connection state changed to: \(connectionState)")
-            updateConnectionUI()
+    // UIKit tracks the store properties read here and calls this again when they change.
+    override func updateProperties() {
+        super.updateProperties()
+        updateConnectionUI(store.connectionState)
+        for (card, hound) in zip(houndCards, store.hounds) {
+            updateCard(card, hound: hound)
+        }
+        if let masterCard {
+            updateCard(masterCard, hound: store.master)
         }
     }
 
-    func updateConnectionUI() {
+    func updateConnectionUI(_ connectionState: MQTTConnectionState) {
         switch connectionState {
         case .connected:
             connectButton.setTitle("Connected", for: .normal)
@@ -151,62 +132,44 @@ class ViewController: UIViewController {
             connectButton.setTitle("Connect", for: .normal)
             connectButton.isSelected = false
             hideOverlay()
-            
-            // Set isConnected to false for all hellhounds and update their views
-            // Set isConnected to false for all hellhounds and update their views
-            for index in hellhounds.indices {
-                hellhounds[index].isConnected = false
-                updateHellhoundView(hound: hellhounds[index])
-            }
-            masterHellhound.isConnected = false
-            updateHellhoundView(hound: masterHellhound)
-
         }
     }
 
     @IBAction func connectToServer() {
-        print("connectToServer pressed")
-        connectionState = .connecting
-        mqttConnect()
+        store.connect()
     }
-    
+
     @IBAction func ledSwitchValueChanged(_ sender: UISwitch) {
-        mqttSetState(value: sender.isOn, hellhoundIndex: sender.tag)
+        store.setOn(sender.isOn, houndIndex: sender.tag)
     }
-    
+
     @IBAction func ledBrightnessValueChanged(_ sender: UISlider) {
-        mqttSetBrightness(value: Int(round(sender.value)), hellhoundIndex: sender.tag)
+        store.setBrightness(Int(round(sender.value)), houndIndex: sender.tag)
     }
 
     @IBAction func ledMasterSwitchValueChanged(_ sender: UISwitch) {
-        for i in 0..<hellhounds.count {
-            mqttSetState(value: sender.isOn, hellhoundIndex: i)
-        }
+        store.setAllOn(sender.isOn)
     }
-    
+
     @IBAction func ledMasterBrightnessValueChanged(_ sender: UISlider) {
-        for i in 0..<hellhounds.count {
-            mqttSetBrightness(value: Int(round(sender.value)), hellhoundIndex: i)
-        }
+        store.setAllBrightness(Int(round(sender.value)))
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupOverlay()
-        hellhounds = getHellhounds()
-        masterHellhound = getMasterHellhound()
+        houndCards = getHoundCards()
+        masterCard = getMasterCard()
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         tabBarController?.delegate = self
-        mqttSetting()
-        mqttConnect()
-        
-        for hound in hellhounds + [masterHellhound!] {
-            hound.ledSlider.maximumValue = 100.0
-            hound.ledSlider.isContinuous = false
-            hound.battery.direction = .maxXEdge
-            hound.battery.level = 4
-            hound.battery.lowThreshold = 20
-            hound.view.alpha = 0.3
+
+        for card in houndCards + [masterCard!] {
+            card.ledSlider.maximumValue = 100.0
+            card.ledSlider.isContinuous = false
+            card.battery.direction = .maxXEdge
+            card.battery.level = 4
+            card.battery.lowThreshold = 20
+            card.view.alpha = 0.3
         }
 
         if let tabBarController = self.tabBarController {
@@ -215,16 +178,15 @@ class ViewController: UIViewController {
             viewControllers?.remove(at: 1)
             tabBarController.viewControllers = viewControllers
         }
-        
+
+        store.connect()
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         navigationController?.navigationBar.isHidden = false
     }
-    
-    func updateCardColor(hound: Hellhound) {
-        let cardView = hound.view
-        
+
+    func updateCardColor(_ cardView: UIView, isConnected: Bool) {
         // Set background color
         cardView.backgroundColor = UIColor(red: 75/255, green: 10/255, blue: 10/255, alpha: 1.0) // Dark Blood Red
         
@@ -238,241 +200,14 @@ class ViewController: UIViewController {
         cardView.layer.shadowOffset = CGSize(width: 0, height: 4)
         cardView.layer.shadowRadius = 8
         
-        cardView.alpha = hound.isConnected ? 1.0 : 0.3
-    }
-    
-    func updateMasterHellhound() {
-        var isOn = false
-        var brightness: Float = 0
-        var batteryLevel: Int? = nil
-        var isConnected = false
-        for hound in hellhounds where hound.isConnected {
-            if hound.isOn {
-                isOn = true
-            }
-            if hound.brightness > brightness {
-                brightness = hound.brightness
-            }
-            if batteryLevel == nil || hound.batteryLevel < batteryLevel! {
-                batteryLevel = hound.batteryLevel
-            }
-            isConnected = true
-        }
-        masterHellhound.isOn = isOn
-        masterHellhound.brightness = brightness
-        if let batteryLevel = batteryLevel {
-            masterHellhound.batteryLevel = batteryLevel
-        }
-        masterHellhound.isConnected = isConnected
-        updateHellhoundView(hound: masterHellhound)
-    }
-    
-    func updateHellhoundView(hound: Hellhound) {
-        hound.ledSwitch.isOn = hound.isOn
-        hound.ledSlider.value = Float(hound.brightness)
-        hound.battery.level = Int(hound.batteryLevel)
-        updateCardColor(hound: hound)
-    }
-    
-    func updateHellhound(index: Int, isOn: Bool, brightness: Int, batteryLevel: Int) {
-        print("updateHellhound: index: \(index) isOn: \(isOn) brightness: \(brightness) batteryLevel: \(batteryLevel)")
-        hellhounds[index].isOn = isOn
-        hellhounds[index].brightness = Float(brightness)
-        hellhounds[index].batteryLevel = batteryLevel
-        hellhounds[index].isConnected = true
-        updateHellhoundView(hound: hellhounds[index])
-        updateMasterHellhound()
-    }
-    
-    // MARK: - MQTT
-    
-    func mqttConnect() {
-        connectionState = .connecting
-        _ = mqtt!.connect()
+        cardView.alpha = isConnected ? 1.0 : 0.3
     }
 
-    func mqttSetting() {
-        let clientID = "HellHounds-Test-" + String(ProcessInfo().processIdentifier)
-        mqtt = CocoaMQTT(clientID: clientID, host: defaultHost, port: 1883)
-        mqtt!.username = ""
-        mqtt!.password = ""
-        mqtt!.willMessage = CocoaMQTTMessage(topic: "/will", string: "dieout")
-        mqtt!.keepAlive = 60
-        mqtt!.delegate = self
-        mqtt!.didReceiveMessage = { mqtt, message, id in
-//            print("Message received in topic \(message.topic) with payload \(message.string!)")
-        }
-        
-    }
-
-    func getClientCertFromP12File(certName: String, certPassword: String) -> CFArray? {
-        // get p12 file path
-        let resourcePath = Bundle.main.path(forResource: certName, ofType: "p12")
-        
-        guard let filePath = resourcePath, let p12Data = NSData(contentsOfFile: filePath) else {
-            print("Failed to open the certificate file: \(certName).p12")
-            return nil
-        }
-        
-        // create key dictionary for reading p12 file
-        let key = kSecImportExportPassphrase as String
-        let options: NSDictionary = [key: certPassword]
-        
-        var items: CFArray?
-        let securityError = SecPKCS12Import(p12Data, options, &items)
-        
-        guard securityError == errSecSuccess else {
-            if securityError == errSecAuthFailed {
-                print("ERROR: SecPKCS12Import returned errSecAuthFailed. Incorrect password?")
-            } else {
-                print("Failed to open the certificate file: \(certName).p12")
-            }
-            return nil
-        }
-        
-        guard let theArray = items, CFArrayGetCount(theArray) > 0 else {
-            return nil
-        }
-        
-        let dictionary = (theArray as NSArray).object(at: 0)
-        guard let identity = (dictionary as AnyObject).value(forKey: kSecImportItemIdentity as String) else {
-            return nil
-        }
-        let certArray = [identity] as CFArray
-        
-        return certArray
-    }
-    func fullTopicFor(topic: String, hellhoundIndex: Int) -> String {
-        return "\(kTopicPrefix)/\(hellhoundIndex)/\(topic)"
-    }
-    
-    func fullTopicForAllHounds(topic: String) -> String {
-        return kTopicPrefix + "$" + topic
-    }
-    
-    func mqttSetState(value: Bool, hellhoundIndex: Int) {
-        let topic = fullTopicFor(topic: kTopicSetState, hellhoundIndex: hellhoundIndex)
-        let stateValue = value ? kMqttLedOff : kMqttLedOn
-        mqtt!.publish(topic, withString: stateValue, qos: .qos0)
-    }
-    
-    func mqttSetBrightness(value: Int, hellhoundIndex: Int) {
-        let topic = fullTopicFor(topic: kTopicSetLevel, hellhoundIndex: hellhoundIndex)
-        let stateValue = String(value)
-        print("SET BRIGHTNESS TOPIC: \(topic), SV:\(stateValue)")
-        mqtt!.publish(topic, withString: stateValue, qos: .qos0)
-    }
-    
-    func mqttGetStatus() {
-        for i in 0..<hellhounds.count {
-            let topic = fullTopicFor(topic: kTopicGetStatus, hellhoundIndex: i)
-            // value is ignored. "0" arbitrary
-            mqtt!.publish(topic, withString: "0", qos: .qos0)
-        }
-    }
-    
-    func mqttSubscribeStatus() {
-        for i in 0..<hellhounds.count {
-            let subscribeJSONTopic = fullTopicFor(topic: kTopicStatusJSON, hellhoundIndex: i)
-            mqtt!.subscribe(subscribeJSONTopic, qos: CocoaMQTTQoS.qos1)
-        }
-    }
-    
-    func mqttHandleMessage(topic: String, message: String) {
-        let topicComponents = topic.components(separatedBy: "/")
-        assert(topicComponents.count == 3)
-        let hellhoundId = topicComponents[1]
-        if topicComponents[2] == kTopicStatusJSON {
-            do {
-                let filteredMessage = message.filter { !"\\".contains($0) }
-                let data = Data(filteredMessage.utf8)
-                if let jsonArray = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Int] {
-//                    print(jsonArray) // use the json here
-                    let ledState = (jsonArray["ledState"] == 1)
-                    let brightness = jsonArray["ledLvl"]!
-                    let battery = jsonArray["battery"]!
-                    updateHellhound(index: Int(hellhoundId) ?? 0, isOn: ledState, brightness: brightness, batteryLevel: battery)
-                } else {
-                    print("bad json\n\(filteredMessage)")
-                }
-            } catch let error as NSError {
-                print(error)
-            }
-            return
-        }
-    }
-    
-}
-
-// MARK: - CocoaMQTTDelegate
-
-extension ViewController: CocoaMQTTDelegate {
-    // Optional ssl CocoaMQTTDelegate
-    func mqtt(_ mqtt: CocoaMQTT, didReceive trust: SecTrust, completionHandler: @escaping (Bool) -> Void) {
-        TRACE("trust: \(trust)")
-        /// Validate the server certificate
-        ///
-        /// Some custom validation...
-        ///
-        /// if validatePassed {
-        ///     completionHandler(true)
-        /// } else {
-        ///     completionHandler(false)
-        /// }
-        completionHandler(true)
-    }
-    
-    func mqtt(_ mqtt: CocoaMQTT, didConnectAck ack: CocoaMQTTConnAck) {
-        TRACE("ack: \(ack)")
-
-        if ack == .accept {
-            connectionState = .connected
-            self.mqttSubscribeStatus()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                self.mqttGetStatus()
-            }
-        } else {
-            connectionState = .disconnected
-        }
-    }
-    
-    func mqtt(_ mqtt: CocoaMQTT, didStateChangeTo state: CocoaMQTTConnState) {
-        TRACE("new state: \(state)")
-    }
-    
-    func mqtt(_ mqtt: CocoaMQTT, didPublishMessage message: CocoaMQTTMessage, id: UInt16) {
-        TRACE("message: \(message.string.description), id: \(id)")
-    }
-    
-    func mqtt(_ mqtt: CocoaMQTT, didPublishAck id: UInt16) {
-        TRACE("id: \(id)")
-    }
-    
-    func mqtt(_ mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16 ) {
-        let messageString = message.string ?? kEmptyResponse
-        TRACE("message: \(messageString), id: \(id)")
-        mqttHandleMessage(topic: message.topic, message: messageString)
-    }
-    
-    func mqtt(_ mqtt: CocoaMQTT, didSubscribeTopics success: NSDictionary, failed: [String]) {
-        TRACE("success: \(success), failed: \(failed)")
-    }
-    
-    func mqtt(_ mqtt: CocoaMQTT, didUnsubscribeTopics topics: [String]) {
-        TRACE("topics: \(topics)")
-    }
-
-    func mqttDidPing(_ mqtt: CocoaMQTT) {
-        TRACE()
-    }
-    
-    func mqttDidReceivePong(_ mqtt: CocoaMQTT) {
-        TRACE()
-    }
-
-    func mqttDidDisconnect(_ mqtt: CocoaMQTT, withError err: Error?) {
-        TRACE("\(err.description)")
-        connectionState = .disconnected
+    func updateCard(_ card: HoundCard, hound: Hound) {
+        card.ledSwitch.isOn = hound.isOn
+        card.ledSlider.value = Float(hound.brightness)
+        card.battery.level = hound.battery
+        updateCardColor(card.view, isConnected: hound.isConnected)
     }
 }
 
@@ -480,34 +215,5 @@ extension ViewController: UITabBarControllerDelegate {
     // Prevent automatic popToRootViewController on double-tap of UITabBarController
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
         return viewController != tabBarController.selectedViewController
-    }
-}
-
-extension ViewController {
-    func TRACE(_ message: String = "", fun: String = #function) {
-        let names = fun.components(separatedBy: ":")
-        var prettyName: String
-        if names.count == 2 {
-            prettyName = names[0]
-        } else {
-            prettyName = names[1]
-        }
-        
-        if fun == "mqttDidDisconnect(_:withError:)" {
-            prettyName = "didDisconect"
-        }
-
-        let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .short, timeStyle: .medium)
-        print("[\(timestamp)] [TRACE] [\(prettyName)]: \(message)")
-    }
-}
-
-extension Optional {
-    // Unwarp optional value for printing log only
-    var description: String {
-        if let warped = self {
-            return "\(warped)"
-        }
-        return ""
     }
 }
