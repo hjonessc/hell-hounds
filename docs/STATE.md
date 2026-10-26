@@ -1,6 +1,6 @@
 # Project state
 
-_Last updated: 2026-10-25 (session 1)_
+_Last updated: 2026-10-25 (session 2)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
@@ -13,11 +13,14 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 ## Current phase
 
-**Phase 1 — Restructure + simulator: not started.**
+**Phase 1 — Restructure + simulator: in progress (step 1 of 5 done).**
 
 ## Done
 
 - **Session 1 (2026-10-25):** kickoff — requirements, phase plan, ADR 0001.
+- **Session 2 (2026-10-25):** Phase 1 step 1 — wrote [PROTOCOL.md](PROTOCOL.md).
+  Correction: on the wire `"1"` = LED on and `"0"` = off. ADR 0001 got this
+  backwards from the misnamed constants `kMqttLedOn`/`kMqttLedOff`.
 
 ## Phased plan
 
@@ -26,11 +29,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 Thinnest end-to-end slice: the existing app at the repo root, dead code gone,
 the protocol written down, and fake hounds to talk to.
 
-1. Write `docs/PROTOCOL.md` from `CocoaMQTT-master/Example/Example/ViewController.swift`:
-   topics `HellHounds-MQTT/<index>/{set-state,set-level,msg,status-json}`,
-   payloads (`"0"` = LED on, `"1"` = off; level as integer string; status JSON
-   `{"ledState","ledLvl","battery"}`, possibly with backslash escapes), QoS,
-   and the `msg` poll.
+1. ~~Write `docs/PROTOCOL.md`~~ — done (session 2).
 2. Write `tools/hound-sim/` — a Python (paho-mqtt) script simulating N hounds
    on a configurable broker/prefix, answering polls and commands, printing
    every state change.
@@ -120,5 +119,7 @@ _None yet._
 
 ## Next steps
 
-1. Read `CocoaMQTT-master/Example/Example/ViewController.swift` (MQTT section,
-   ~line 289 onward) and write `docs/PROTOCOL.md`.
+1. Phase 1 step 2: write `tools/hound-sim/` against [PROTOCOL.md](PROTOCOL.md).
+   Until Q2 is answered, the sim should send `status-json` after every
+   command as well as when polled, so the old app (which polls only once)
+   shows changes.
