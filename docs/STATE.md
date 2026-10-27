@@ -217,8 +217,14 @@ Signing, bundle ID, privacy text, first build out.
    All Hounds plus Hounds 1–4 with the fake's batteries 100/70/40/10, no
    banner. Not checked on the phone: touching a control, or the public or a
    LAN broker.
-5. App Store Connect app record (user), then archive and upload
-   (`xcodebuild archive` / `-exportArchive`).
+5. ~~App Store Connect record, archive and upload~~ — done (session 5):
+   the user registered the explicit App ID `io.henryerinjones.HellHounds`
+   in the developer portal (the device build had used the team wildcard,
+   so App Store Connect didn't offer it) and created the app record (SKU
+   is the user's choice). Version 1.0 build 1 archived and uploaded with
+   [`tools/testflight/ExportOptions.plist`](../tools/testflight/ExportOptions.plist)
+   (commands under "Uploading a TestFlight build" below). Apple's
+   processing of the build wasn't watched.
 6. Add the friend as an App Store Connect user and internal tester
    (user); they install from TestFlight.
 
@@ -287,9 +293,10 @@ protocol.
 
 ## Next steps
 
-1. **Phase 6 (TestFlight)** — step 5: the user creates the App Store
-   Connect app record for `io.henryerinjones.HellHounds`; then archive and
-   upload; then step 6.
+1. **Phase 6 (TestFlight)** — step 6: once build 1 has finished
+   processing in App Store Connect, the user adds the friend as an App
+   Store Connect user and internal tester; the friend installs from
+   TestFlight. That closes Phase 6.
 2. **Phase 4 (names and images)** after that, with a short plan. A SwiftData
    model keyed by broker + hound index (a name, an SF Symbol or a photo),
    because the index is all a hound tells us (Q1, Phase 7 may add a unique
@@ -309,6 +316,14 @@ here, and without `-collect-test-diagnostics never` a failing run waits
 
 ```bash
 xcodebuild test -project HellHounds.xcodeproj -scheme HellHounds -destination "platform=iOS Simulator,id=$(xcrun simctl list devices booted | grep -oE '[0-9A-F-]{36}' | head -1)" -collect-test-diagnostics never
+```
+
+Uploading a TestFlight build (bump `CURRENT_PROJECT_VERSION` in both app
+configurations first; build 1 is used):
+
+```bash
+xcodebuild archive -project HellHounds.xcodeproj -scheme HellHounds -configuration Release -destination "generic/platform=iOS" -archivePath build/HellHounds.xcarchive -allowProvisioningUpdates
+xcodebuild -exportArchive -archivePath build/HellHounds.xcarchive -exportOptionsPlist tools/testflight/ExportOptions.plist -exportPath build/export -allowProvisioningUpdates
 ```
 
 Notes for later phases:
