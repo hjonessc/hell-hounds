@@ -1,6 +1,6 @@
 # Project state
 
-_Last updated: 2026-10-27 (session 4)_
+_Last updated: 2026-10-27 (session 5)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
@@ -16,7 +16,10 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 **Phase 1 — Restructure + simulator: done (session 2).**
 **Phase 2 — MQTT layer + package review: done (session 3).**
 **Phase 3 — SwiftUI rewrite: done (session 4).**
-**Phase 4 — Names and images: not started.**
+**Phase 4 — Names and images: not started (skipped for now).**
+**Phase 5 — README: not started (skipped for now).**
+**Phase 6 — TestFlight: in progress (session 5).** The user paid for the
+Apple Developer membership (Q4), so this phase is unblocked and taken next.
 
 ## Done
 
@@ -188,7 +191,26 @@ command regenerates them.
 
 ### Phase 6 — TestFlight
 
-Signing, bundle ID, privacy text, first build out. Blocked on Q4.
+Signing, bundle ID, privacy text, first build out.
+
+1. ~~Inputs from the user~~ — done (session 5): team `K4BXBW45T2` is the
+   paid team; bundle ID `io.henryerinjones.HellHounds`; the friend is an
+   **internal** tester (an App Store Connect user, so no Beta App Review);
+   a fresh install defaults to the **public broker** (real hounds), as now.
+2. ~~Identity~~ — done (session 5): app bundle ID is now
+   `io.henryerinjones.HellHounds` (was `ChatExample`; installs of the old
+   ID don't update in place). Display name "Hellhounds", version 1.0 (1).
+3. ~~Compliance~~ — done (session 5): `HellHounds/PrivacyInfo.xcprivacy`
+   (no tracking, no data collected, UserDefaults with reason CA92.1);
+   `ITSAppUsesNonExemptEncryption = NO` (plain TCP MQTT);
+   `NSLocalNetworkUsageDescription` for LAN brokers; app icon PNGs
+   re-encoded without an alpha channel (they were already fully opaque).
+   Checked in the built bundle. 40 unit + 2 UI tests pass.
+4. Real-device run from Xcode on the user's iPhone (iOS 26).
+5. App Store Connect app record (user), then archive and upload
+   (`xcodebuild archive` / `-exportArchive`).
+6. Add the friend as an App Store Connect user and internal tester
+   (user); they install from TestFlight.
 
 **Done when:** a friend installs the app from TestFlight.
 
@@ -216,8 +238,8 @@ protocol.
   timer. The app subscribes to `+/status-json` and polls indices 0–7 plus
   every index seen, once per connect, so either answer works.
 - **Q3** (blocks Phase 7): Move to a private / authenticated broker?
-- **Q4** (blocks iCloud in Phase 4, and Phase 6): When to pay for the Apple
-  Developer membership — user will pay once it becomes useful.
+- ~~**Q4**~~ answered (session 5): the user has the paid Apple Developer
+  membership. Unblocks Phase 6 and iCloud sync in Phase 4.
 - **Q5** (blocks Phase 8): KMP vs. separate Android app.
 - ~~**Q6**~~ answered (session 2): `client-keycert.p12` is the CocoaMQTT
   example's sample client cert (`CN=MacBook-Air.local, O=client`, issued by
@@ -237,13 +259,16 @@ protocol.
 - Testing tip: in the iOS Simulator tool a tap doesn't flip a switch; drag
   the thumb with `duration` ≥ 0.5 s (a quick 0.3 s drag was ignored once).
   Sliders need a drag too and send on release. Launch with
-  `xcrun simctl launch <id> io.henryerinjones.ChatExample -mqttHost localhost`.
+  `xcrun simctl launch <id> io.henryerinjones.HellHounds -mqttHost localhost`.
 - `check_sim.py` uses a random prefix and is safe.
 - On MQTTNIO / NIOTransportServices a refused connection (no broker) fails
   only at the connect timeout (now 5 s), so "Connecting…" shows that long.
-- The Simulator's app now has `localhost:1884` saved as its broker (from
-  session 4 testing). Launching without `-mqttHost` uses it, not the public
-  broker. Saved values don't show in `simctl spawn … defaults read`.
+- **The bundle ID changed (session 5), so the Simulator's
+  `io.henryerinjones.HellHounds` app has no saved broker: launching it
+  without `-mqttHost` or `-useFakeTransport YES` connects to the public
+  broker with real hounds.** Always pass one of them. (The old
+  `ChatExample` app in the Simulator still has `localhost:1884` saved.)
+  Saved values don't show in `simctl spawn … defaults read`.
 - Simulator tool: after `select_all` in a text field, an edit menu covers
   the row below; press the right-arrow key to dismiss it before tapping.
 - The tab bar's minimize-on-scroll (`.tabBarMinimizeBehavior(.onScrollDown)`)
@@ -252,14 +277,16 @@ protocol.
 
 ## Next steps
 
-1. **Start Phase 4 (names and images)** with a short plan. A SwiftData
+1. **Phase 6 (TestFlight)** — step 4: run on the user's iPhone from
+   Xcode (needs the phone connected and Developer Mode on), then steps 5–6.
+2. **Phase 4 (names and images)** after that, with a short plan. A SwiftData
    model keyed by broker + hound index (a name, an SF Symbol or a photo),
    because the index is all a hound tells us (Q1, Phase 7 may add a unique
    ID). Rename and pick an icon from the card, show the name instead of
    "Hound n", photos stored as external data. iCloud sync waits for Q4.
    **Done when** a renamed device with a photo keeps both after relaunch
    (covered by a test).
-2. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
+3. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
 
 Manual testing: start Docker Desktop, then the local broker and sim as in
 `tools/hound-sim/README.md`, and launch with `-mqttHost localhost`. Never on
@@ -274,8 +301,6 @@ xcodebuild test -project HellHounds.xcodeproj -scheme HellHounds -destination "p
 ```
 
 Notes for later phases:
-- Bundle ID is still `io.henryerinjones.ChatExample` (kept so existing installs
-  update in place); change it in Phase 6.
 - Real hounds also publish `status` and `BatStats` (voltage and current);
   the Phase 3 battery indicator could use them (PROTOCOL.md).
 - The project was generated once with XcodeGen and is now edited in Xcode

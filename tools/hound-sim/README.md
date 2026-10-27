@@ -48,7 +48,7 @@ broker isn't on 1883). In Xcode, add it under Scheme › Run › Arguments; from
 the shell:
 
 ```bash
-xcrun simctl launch booted io.henryerinjones.ChatExample -mqttHost localhost
+xcrun simctl launch booted io.henryerinjones.HellHounds -mqttHost localhost
 ```
 
 ## Smoke test
