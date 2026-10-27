@@ -37,12 +37,15 @@ final class FakeMQTTTransport: MQTTTransport {
     }
 
     /// Four hounds with the batteries `hound-sim` uses.
-    static let defaultHounds: [Int: FakeHound] = [
-        0: FakeHound(battery: 100),
-        1: FakeHound(battery: 70),
-        2: FakeHound(battery: 40),
-        3: FakeHound(battery: 10),
-    ]
+    static let defaultHounds = hounds(count: 4)
+
+    /// Hounds 0..<count, with batteries spread from 100 down to 10 like `hound-sim`.
+    static func hounds(count: Int) -> [Int: FakeHound] {
+        Dictionary(uniqueKeysWithValues: (0..<count).map { index in
+            let battery = count <= 1 ? 100 : Int((100 - 90 * Double(index) / Double(count - 1)).rounded(.toNearestOrEven))
+            return (index, FakeHound(battery: battery))
+        })
+    }
 
     deinit {
         continuation.finish()

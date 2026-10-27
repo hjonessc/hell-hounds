@@ -32,8 +32,9 @@ Every device topic has the form
 ```
 
 - `<prefix>` is `HellHounds-MQTT`.
-- `<index>` is the device number as a decimal integer. The app uses
-  `0`–`3`: cards 1, 2, 3 and "Jack" are indices 0, 1, 2 and 3.
+- `<index>` is the device number as a decimal integer (digits only). The
+  app shows index `n` as "Hound n+1". The 2019 app had fixed cards 1, 2, 3
+  and "Jack" for indices 0–3.
 - `<leaf>` is one of the leaves below.
 
 | Leaf | Direction | QoS | Payload |
@@ -66,8 +67,9 @@ or off (**unverified** what the firmware does with level `0`).
 ### `msg`: status poll
 
 Publishing anything to `<prefix>/<index>/msg` asks hound `<index>` to send
-its `status-json`. The app polls indices 0–3 **once**, 0.2 s after the
-connection is accepted. It doesn't poll again after that.
+its `status-json`. On every connect the app polls once, 0.2 s after the
+connection is accepted: indices 0–7 (the probe range) plus every index it has
+already seen. It doesn't poll again until the next connect.
 
 ### `status-json`: device status
 
@@ -94,10 +96,11 @@ How the app parses it:
   leaves that value as it was (the 2019 app crashed here, as it did on an
   index above 3).
 - The index comes from the second part of the topic. A message whose index
-  isn't an integer, or isn't a hound the app knows, is dropped.
+  isn't plain digits is dropped.
 
-The app subscribes to `<prefix>/<index>/status-json` for indices 0–3, one
-topic each (no wildcard yet; ADR 0001 plans `<prefix>/+/status-json`).
+The app subscribes to `<prefix>/+/status-json` and adds a hound the first
+time a valid `status-json` arrives for its index, in or out of the probe
+range. Since the broker is public, anyone can add a hound this way.
 
 **Unverified (Q2):** whether a hound sends `status-json` on its own (after
 a `set-state` / `set-level`, on a timer, or at boot), or only when polled

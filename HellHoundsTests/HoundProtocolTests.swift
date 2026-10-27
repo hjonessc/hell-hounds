@@ -41,6 +41,11 @@ struct HoundProtocolTests {
         "Other/1/status-json",
         "HellHounds-MQTT/1/status-json/extra",
         "HellHounds-MQTT/status-json",
+        "HellHounds-MQTT//status-json",
+        "HellHounds-MQTT/-1/status-json",
+        "HellHounds-MQTT/+1/status-json",
+        "HellHounds-MQTT/+/status-json",
+        "HellHounds-MQTT/99999999999999999999/status-json",
     ])
     func statusIndexRejectsOtherTopics(topic: String) {
         #expect(HoundProtocol.statusIndex(fromTopic: topic) == nil)

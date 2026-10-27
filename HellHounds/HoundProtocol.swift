@@ -21,6 +21,11 @@ enum HoundProtocol {
         "\(topicPrefix)/\(index)/\(leaf.rawValue)"
     }
 
+    /// Matches `leaf` for every index, for discovery.
+    static func topicFilter(_ leaf: Leaf) -> String {
+        "\(topicPrefix)/+/\(leaf.rawValue)"
+    }
+
     /// On the wire `"1"` is on and `"0"` is off.
     static func setStatePayload(isOn: Bool) -> String {
         isOn ? "1" : "0"
@@ -34,11 +39,15 @@ enum HoundProtocol {
     static let getStatusPayload = "0"
 
     /// The device index in `<prefix>/<index>/status-json`, or nil for any other topic.
+    /// The index must be plain digits: anyone on the broker can publish here,
+    /// and `Int("+1")` or `Int("-1")` would otherwise parse.
     static func statusIndex(fromTopic topic: String) -> Int? {
         let parts = topic.split(separator: "/", omittingEmptySubsequences: false)
         guard parts.count == 3,
               parts[0] == topicPrefix,
-              parts[2] == Leaf.statusJSON.rawValue
+              parts[2] == Leaf.statusJSON.rawValue,
+              !parts[1].isEmpty,
+              parts[1].allSatisfy({ ("0"..."9").contains($0) })
         else { return nil }
         return Int(parts[1])
     }

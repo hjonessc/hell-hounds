@@ -10,6 +10,7 @@ import Foundation
 enum TransportFactory {
     /// Launch arguments, read through UserDefaults:
     /// - `-useFakeTransport YES`: in-process fake hounds, no network (also used under unit tests).
+    ///   `-fakeHoundCount 6` sets how many (default 4).
     /// - `-mqttHost localhost` (optionally `-mqttPort 1884`): a local broker instead of the public one.
     @MainActor
     static func makeTransport() -> any MQTTTransport {
@@ -17,7 +18,7 @@ enum TransportFactory {
         let environment = ProcessInfo.processInfo.environment
         let isUnitTestHost = environment["XCTestConfigurationFilePath"] != nil || environment["XCTestSessionIdentifier"] != nil
         if isUnitTestHost || defaults.bool(forKey: "useFakeTransport") {
-            return FakeMQTTTransport()
+            return FakeMQTTTransport(hounds: FakeMQTTTransport.hounds(count: defaults.integer(forKey: "fakeHoundCount").nonZero ?? 4))
         }
         return MQTTNIOTransport(
             host: defaults.string(forKey: "mqttHost") ?? "broker.hivemq.com",

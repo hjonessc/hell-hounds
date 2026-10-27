@@ -22,18 +22,22 @@ struct Hound: Identifiable, Equatable {
 @Observable
 final class HoundStore {
     private(set) var connectionState: MQTTConnectionState = .disconnected
-    private(set) var hounds: [Hound]
+    /// Every hound that has reported since launch, sorted by index.
+    private(set) var hounds: [Hound] = []
 
     @ObservationIgnored private let transport: any MQTTTransport
+    @ObservationIgnored private let probeIndices: Range<Int>
     @ObservationIgnored private let statusPollDelay: Duration
     @ObservationIgnored private var eventsTask: Task<Void, Never>?
     @ObservationIgnored private var pollTask: Task<Void, Never>?
 
-    /// Indices 0..<houndCount until discovery lands (Phase 3).
-    init(transport: any MQTTTransport, houndCount: Int = 4, statusPollDelay: Duration = .milliseconds(200)) {
+    /// Hounds are discovered: any index that publishes `status-json` is added.
+    /// Hounds that only answer polls (Q2) are found by polling `probeIndices`
+    /// on every connect, along with every index already known.
+    init(transport: any MQTTTransport, probeIndices: Range<Int> = 0..<8, statusPollDelay: Duration = .milliseconds(200)) {
         self.transport = transport
+        self.probeIndices = probeIndices
         self.statusPollDelay = statusPollDelay
-        hounds = (0..<houndCount).map { Hound(index: $0) }
         // Ends when the transport (owned by this store) finishes its stream.
         eventsTask = Task { [weak self, events = transport.events] in
             for await event in events {
@@ -95,9 +99,7 @@ final class HoundStore {
             connectionState = state
             switch state {
             case .connected:
-                for hound in hounds {
-                    transport.subscribe(to: HoundProtocol.topic(.statusJSON, index: hound.index))
-                }
+                transport.subscribe(to: HoundProtocol.topicFilter(.statusJSON))
                 pollTask?.cancel()
                 pollTask = Task { [weak self, statusPollDelay] in
                     try? await Task.sleep(for: statusPollDelay)
@@ -114,9 +116,9 @@ final class HoundStore {
             }
         case .message(let message):
             guard let index = HoundProtocol.statusIndex(fromTopic: message.topic),
-                  let i = hounds.firstIndex(where: { $0.index == index }),
                   let status = HoundStatus(payload: message.payload)
             else { return }
+            let i = houndPosition(index: index)
             hounds[i].isConnected = true
             hounds[i].isOn = status.isOn
             if let brightness = status.brightness { hounds[i].brightness = brightness }
@@ -124,9 +126,19 @@ final class HoundStore {
         }
     }
 
+    /// The position of hound `index` in `hounds`, inserting it in index order if new.
+    private func houndPosition(index: Int) -> Int {
+        let i = hounds.firstIndex(where: { $0.index >= index }) ?? hounds.endIndex
+        if i == hounds.endIndex || hounds[i].index != index {
+            hounds.insert(Hound(index: index), at: i)
+        }
+        return i
+    }
+
     private func pollStatus() {
-        for hound in hounds {
-            transport.publish(HoundProtocol.getStatusPayload, to: HoundProtocol.topic(.getStatus, index: hound.index))
+        let indices = Set(probeIndices).union(hounds.map(\.index)).sorted()
+        for index in indices {
+            transport.publish(HoundProtocol.getStatusPayload, to: HoundProtocol.topic(.getStatus, index: index))
         }
     }
 }

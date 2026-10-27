@@ -2,8 +2,8 @@
 //  HoundStoreTests.swift
 //  HellHoundsTests
 //
-//  The status / set-state / set-level round trip through HoundStore and the
-//  in-app fake transport.
+//  Discovery and the status / set-state / set-level round trip through
+//  HoundStore and the in-app fake transport.
 //
 
 import Testing
@@ -28,48 +28,108 @@ struct HoundStoreTests {
         return true
     }
 
-    private func connectAndWaitForAllHounds() async throws {
+    private func connectAndWaitForAllHounds(count: Int = 4) async throws {
         store.connect()
-        try #require(try await eventually { store.hounds.allSatisfy(\.isConnected) })
+        try #require(try await eventually { store.hounds.count == count && store.hounds.allSatisfy(\.isConnected) })
     }
 
-    // MARK: - Status
+    private func status(index: Int, _ payload: String) -> MQTTMessage {
+        MQTTMessage(topic: HoundProtocol.topic(.statusJSON, index: index), payload: payload)
+    }
 
-    @Test func connectSubscribesToEachHoundAndPollsIt() async throws {
+    private var probeTopics: [String] {
+        (0..<8).map { HoundProtocol.topic(.getStatus, index: $0) }
+    }
+
+    // MARK: - Discovery
+
+    @Test func noHoundsBeforeAnyReport() {
+        #expect(store.hounds.isEmpty)
+    }
+
+    @Test func connectSubscribesToTheWildcardAndPollsTheProbeRange() async throws {
         try await connectAndWaitForAllHounds()
-
         #expect(store.connectionState == .connected)
-        #expect(fake.subscriptions == Set((0..<4).map { HoundProtocol.topic(.statusJSON, index: $0) }))
-        #expect(fake.published.map(\.topic) == (0..<4).map { HoundProtocol.topic(.getStatus, index: $0) })
+        #expect(fake.subscriptions == ["HellHounds-MQTT/+/status-json"])
+        #expect(fake.published.map(\.topic) == probeTopics)
+        #expect(store.hounds.map(\.index) == [0, 1, 2, 3])
         #expect(store.hounds.map(\.battery) == [100, 70, 40, 10])
         #expect(store.hounds.map(\.brightness) == [50, 50, 50, 50])
         #expect(store.hounds.allSatisfy { !$0.isOn })
     }
 
-    @Test func houndsStayDisconnectedUntilTheyReport() async throws {
-        fake.hounds = [2: .init(battery: 33)]
+    @Test func onlyHoundsThatReportAppear() async throws {
+        fake.hounds = [2: .init(battery: 33), 5: .init(battery: 44)]
         store.connect()
-        #expect(try await eventually { store.hounds[2].isConnected })
-        #expect(store.hounds[2].battery == 33)
-        #expect(store.hounds.filter(\.isConnected).count == 1)
+        #expect(try await eventually { store.hounds.count == 2 })
+        #expect(store.hounds.map(\.index) == [2, 5])
+        #expect(store.hounds.map(\.battery) == [33, 44])
+        #expect(store.hounds.allSatisfy { $0.isConnected })
     }
 
-    @Test func unknownIndicesAndMalformedStatusAreIgnored() async throws {
-        try await connectAndWaitForAllHounds()
-        fake.subscribe(to: "HellHounds-MQTT/+/status-json")
+    @Test func sixHoundsAreDiscovered() async throws {
+        fake.hounds = FakeMQTTTransport.hounds(count: 6)
+        try await connectAndWaitForAllHounds(count: 6)
+        #expect(store.hounds.map(\.index) == Array(0..<6))
+        #expect(store.hounds.map(\.battery) == [100, 82, 64, 46, 28, 10])
+    }
 
-        fake.deliver(MQTTMessage(topic: "HellHounds-MQTT/7/status-json", payload: #"{"ledState":true,"ledLvl":1,"battery":1}"#))
-        fake.deliver(MQTTMessage(topic: HoundProtocol.topic(.statusJSON, index: 0), payload: "garbage"))
-        fake.deliver(MQTTMessage(topic: HoundProtocol.topic(.statusJSON, index: 1), payload: #"{"ledState":true,"ledLvl":77,"battery":70}"#))
+    @Test func houndsAreKeptInIndexOrder() async throws {
+        fake.hounds = [:]
+        store.connect()
+        #expect(try await eventually { store.connectionState == .connected })
+        for index in [6, 1, 9, 4] {
+            fake.deliver(status(index: index, #"{"ledState":false}"#))
+        }
+        #expect(try await eventually { store.hounds.count == 4 })
+        #expect(store.hounds.map(\.index) == [1, 4, 6, 9])
+    }
+
+    @Test func aHoundOutsideTheProbeRangeIsAddedWhenItReportsAndPolledAfterThat() async throws {
+        try await connectAndWaitForAllHounds()
+        fake.hounds[12] = .init(isOn: true, level: 5, battery: 60)
+        fake.sendStatus(index: 12)  // reporting on its own, unasked
+        #expect(try await eventually { store.hounds.count == 5 })
+        #expect(store.hounds.last == Hound(index: 12, isConnected: true, isOn: true, brightness: 5, battery: 60))
+
+        fake.dropConnection()
+        #expect(try await eventually { store.connectionState == .disconnected })
+        let before = fake.published.count
+        store.connect()
+        #expect(try await eventually { store.hounds.allSatisfy(\.isConnected) })
+        #expect(fake.published.dropFirst(before).map(\.topic) == probeTopics + [HoundProtocol.topic(.getStatus, index: 12)])
+    }
+
+    @Test(arguments: [
+        MQTTMessage(topic: "HellHounds-MQTT/x/status-json", payload: #"{"ledState":true}"#),
+        MQTTMessage(topic: "HellHounds-MQTT//status-json", payload: #"{"ledState":true}"#),
+        MQTTMessage(topic: "HellHounds-MQTT/-1/status-json", payload: #"{"ledState":true}"#),
+        MQTTMessage(topic: "HellHounds-MQTT/+1/status-json", payload: #"{"ledState":true}"#),
+        MQTTMessage(topic: "HellHounds-MQTT/7/status-json", payload: "garbage"),
+    ])
+    func malformedReportsAddNoHound(message: MQTTMessage) async throws {
+        try await connectAndWaitForAllHounds()
+        fake.deliver(message)
+        fake.hounds[3]?.battery = 9
+        fake.sendStatus(index: 3)  // a later message, to know the store has caught up
+        #expect(try await eventually { store.hounds[3].battery == 9 })
+        #expect(store.hounds.map(\.index) == [0, 1, 2, 3])
+    }
+
+    // MARK: - Status
+
+    @Test func malformedStatusForAKnownHoundIsIgnored() async throws {
+        try await connectAndWaitForAllHounds()
+        fake.deliver(status(index: 0, "garbage"))
+        fake.deliver(status(index: 1, #"{"ledState":true,"ledLvl":77,"battery":70}"#))
 
         #expect(try await eventually { store.hounds[1].isOn })
-        #expect(store.hounds.count == 4)
         #expect(store.hounds[0] == Hound(index: 0, isConnected: true, isOn: false, brightness: 50, battery: 100))
     }
 
     @Test func missingFieldsKeepThePreviousValues() async throws {
         try await connectAndWaitForAllHounds()
-        fake.deliver(MQTTMessage(topic: HoundProtocol.topic(.statusJSON, index: 3), payload: #"{"ledState":true}"#))
+        fake.deliver(status(index: 3, #"{"ledState":true}"#))
         #expect(try await eventually { store.hounds[3].isOn })
         #expect(store.hounds[3].brightness == 50)
         #expect(store.hounds[3].battery == 10)
@@ -103,7 +163,7 @@ struct HoundStoreTests {
         #expect(try await eventually { store.hounds[2].brightness == 100 })
     }
 
-    @Test func masterCommandsGoToEveryHound() async throws {
+    @Test func masterCommandsGoToEveryDiscoveredHound() async throws {
         try await connectAndWaitForAllHounds()
         let before = fake.published.count
 
@@ -160,8 +220,8 @@ struct HoundStoreTests {
         let before = fake.published.count
         store.connect()
         #expect(try await eventually { store.hounds.allSatisfy(\.isConnected) })
-        #expect(fake.subscriptions.count == 4)
-        #expect(fake.published.dropFirst(before).map(\.topic) == (0..<4).map { HoundProtocol.topic(.getStatus, index: $0) })
+        #expect(fake.subscriptions.count == 1)
+        #expect(fake.published.dropFirst(before).map(\.topic) == probeTopics)
     }
 
     @Test func connectWhileConnectedDoesNothing() async throws {

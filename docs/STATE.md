@@ -15,7 +15,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 **Phase 1 — Restructure + simulator: done (session 2).**
 **Phase 2 — MQTT layer + package review: done (session 3).**
-**Phase 3 — SwiftUI rewrite: in progress (session 4, step 1 of 6 done).**
+**Phase 3 — SwiftUI rewrite: in progress (session 4, steps 1–2 of 6 done).**
 
 ## Done
 
@@ -90,6 +90,17 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   a switch (`set-state 0`), master switch (`set-state 1` to all four), the
   rows matching the returned status (pixel check), and a disconnect in the
   background with reconnect and re-poll on return.
+  Phase 3 step 2 — discovery: `HoundStore` starts empty, subscribes to
+  `HellHounds-MQTT/+/status-json` and adds a hound (sorted by index) the
+  first time it reports; every connect polls the probe range 0..<8 plus the
+  indices already seen. `statusIndex` accepts digits only (rejects `-1`,
+  `+1`, empty). `-fakeHoundCount N` sets the fake's hound count (batteries
+  spread 100→10 like `hound-sim`). 30 tests (new: discovery, ordering,
+  out-of-range self-reporter, malformed topics); removing the digits-only
+  check fails two of them. Checked on local Mosquitto: `hound-sim -n 5`
+  shows 5 hounds with the sim's batteries; a sim started at index 11 while
+  the app was connected appeared as "Hound 12" and got `set-state 1` from
+  its switch. `-useFakeTransport YES -fakeHoundCount 6` shows 6.
 
 ## Phased plan
 
@@ -128,11 +139,7 @@ Device list with wildcard discovery, master control, a new battery indicator,
 broker settings, Liquid Glass tab bar and styling, proper scrolling.
 
 1. ~~SwiftUI `App` + interim list; UIKit, storyboards and old assets gone; Swift 6 mode~~ — done (session 4).
-2. Discovery in `HoundStore`: subscribe to `HellHounds-MQTT/+/status-json`,
-   `hounds` starts empty, add a hound the first time its index reports; on
-   connect poll the known indices plus a probe range 0..<8 (Q2). Update
-   `HoundStoreTests`; test a 5th/6th hound, an out-of-range self-reporter
-   and malformed topics.
+2. ~~Discovery in `HoundStore` (wildcard, probe range 0..<8)~~ — done (session 4).
 3. Device list (cards, master on top, connection banner) and a SwiftUI
    battery indicator.
 4. Settings tab (broker host/port in `@AppStorage`, launch args override,
@@ -216,9 +223,11 @@ protocol.
 
 ## Next steps
 
-1. **Phase 3 step 2: discovery in `HoundStore`** (see the Phase 3 plan above).
-   The fake transport already matches `+`; give it a hound count for 6+ hounds.
-   Then steps 3–6.
+1. **Phase 3 step 3: device list cards and battery indicator** (see the
+   Phase 3 plan above), then steps 4–6. Note for step 5: in the interim
+   plain list, 6 hounds plus the master still fit on an iPhone 17 Pro
+   screen; if the cards don't push the 6th off screen, use more fake hounds
+   (`-fakeHoundCount`) so the UI test really scrolls.
    **Done when** a UI test on the fake transport passes with 6 devices and the
    app works against `hound-sim` on the local broker, including a 5th device
    (`hound-sim -n 5`) appearing without code changes.
