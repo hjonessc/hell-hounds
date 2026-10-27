@@ -1,6 +1,6 @@
 # Project state
 
-_Last updated: 2026-10-26 (session 4)_
+_Last updated: 2026-10-27 (session 4)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
@@ -20,27 +20,10 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 ## Done
 
-- **Session 1 (2026-10-25):** kickoff — requirements, phase plan, ADR 0001.
-- **Session 2 (2026-10-25):** Phase 1 step 1 — wrote [PROTOCOL.md](PROTOCOL.md).
-  Correction: on the wire `"1"` = LED on and `"0"` = off. ADR 0001 got this
-  backwards from the misnamed constants `kMqttLedOn`/`kMqttLedOff`.
-  Phase 1 step 2 — wrote [`tools/hound-sim/`](../tools/hound-sim/README.md)
-  (simulator plus `check_sim.py` smoke test, passing against the public broker).
-  Phase 1 step 3 — new top-level `HellHounds.xcodeproj` (iOS 26, Swift 5 mode,
-  CocoaMQTT 2.1.6 via SPM, synchronized `HellHounds/` folder, generated
-  Info.plist); app files moved there with `git mv`. The Objective-C template
-  project had to go first because it used the same names. Simulator build
-  passes; checked in Simulator against `hound-sim`: 4 hounds shown with
-  the right batteries, the switch sends `set-state 1`, the slider sends
-  `set-level`, and the switch and Master card update from the returned status.
-  Phase 1 step 4 — deleted `HellHoundsTests/`, `CocoaMQTT-master/` (vendored
-  library, BatteryView source, Podfile, old project, `client-keycert.p12`) and
-  `Assets/` (copies of the app icon and unused source images). Fixed a startup
-  race in `check_sim.py` (it now polls until the sim answers).
-  Phase 1 step 5 — a fresh clone of `f8d6d1b` builds; its app, run against
-  `hound-sim`, shows the 4 hounds, and the sim logged a switch (`set-state 1`),
-  a slider (`set-level 14`) and the Master switch (`set-state 0` to all four).
-  **Phase 1 done.**
+- **Sessions 1–2 (2026-10-25), kickoff + Phase 1:** requirements and ADR 0001;
+  PROTOCOL.md (on the wire `"1"` = on, `"0"` = off, correcting ADR 0001),
+  `tools/hound-sim/`, the top-level Xcode project, leftovers deleted, clean
+  clone checked against the sim — see tag `m1` and git history for detail.
 - **Session 3 (2026-10-26):** Phase 2 step 1 — researched MQTT libraries and
   wrote [ADR 0002](decisions/0002-mqtt-client-library.md):
   switch to MQTTNIO 3 (pin `3.0.0-rc.1`) behind our own `MQTTTransport`
@@ -78,7 +61,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   The app uses the fake transport when hosting tests or launched with
   `-useFakeTransport YES`; the test run made no network connections.
   **Phase 2 done.**
-- **Session 4 (2026-10-26):** Phase 3 step 1 — the app is SwiftUI now:
+- **Session 4 (2026-10-26/27):** Phase 3 step 1 — the app is SwiftUI now:
   `HellHoundsApp` owns the `HoundStore`, connects when the scene is active
   and disconnects in the background (`scenePhase`); `TransportFactory` keeps
   the launch-argument rules. An interim plain `HoundListView` (master row plus
@@ -263,6 +246,9 @@ protocol.
   broker. Saved values don't show in `simctl spawn … defaults read`.
 - Simulator tool: after `select_all` in a text field, an edit menu covers
   the row below; press the right-arrow key to dismiss it before tapping.
+- The tab bar's minimize-on-scroll (`.tabBarMinimizeBehavior(.onScrollDown)`)
+  wasn't seen to minimize in the short lists tested; not investigated.
+- MQTTNIO is still pinned to `3.0.0-rc.1` (ADR 0002).
 
 ## Next steps
 
