@@ -27,6 +27,8 @@ final class MQTTNIOTransport: MQTTTransport {
     }
 
     private var runTask: Task<Void, Never>?
+    /// True while `run()` sleeps between attempts.
+    private var isWaitingToRetry = false
     private var connection: MQTTConnection?
     /// Commands for the current connection; nil while disconnected, when
     /// commands are dropped (the store resubscribes on every `.connected`).
@@ -47,14 +49,21 @@ final class MQTTNIOTransport: MQTTTransport {
         continuation.finish()
     }
 
+    /// Starts the connection loop; while the loop waits to retry, retries now.
     func connect() {
-        guard runTask == nil else { return }
+        if runTask != nil {
+            guard isWaitingToRetry else { return }
+            // Cancelling ends only the backoff sleep; there's no connection to close.
+            runTask?.cancel()
+        }
+        isWaitingToRetry = false
         runTask = Task { await run() }
     }
 
     func disconnect() {
         runTask?.cancel()
         runTask = nil
+        isWaitingToRetry = false
         // Ends the current connection's waitOnClose, so run() unwinds.
         connection?.close()
     }
@@ -91,11 +100,13 @@ final class MQTTNIOTransport: MQTTTransport {
             }
             continuation.yield(.stateChanged(.disconnected))
             guard !Task.isCancelled else { return }
+            isWaitingToRetry = true
             do {
                 try await Task.sleep(for: backoff)
             } catch {
-                return
+                return  // connect() replaced this loop or disconnect() stopped it
             }
+            isWaitingToRetry = false
             backoff = min(backoff * 2, Self.maxBackoff)
         }
     }
