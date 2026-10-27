@@ -38,6 +38,16 @@
                ReferencedContainer = "container:HellHounds.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "C3D0C0DE0000000000000008"
+               BuildableName = "HellHoundsUITests.xctest"
+               BlueprintName = "HellHoundsUITests"
+               ReferencedContainer = "container:HellHounds.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

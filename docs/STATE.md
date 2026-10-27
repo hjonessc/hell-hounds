@@ -15,7 +15,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 **Phase 1 — Restructure + simulator: done (session 2).**
 **Phase 2 — MQTT layer + package review: done (session 3).**
-**Phase 3 — SwiftUI rewrite: in progress (session 4, steps 1–4 of 6 done).**
+**Phase 3 — SwiftUI rewrite: in progress (session 4, steps 1–5 of 6 done).**
 
 ## Done
 
@@ -125,6 +125,14 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   sim hounds, 1884 with 3): the stored broker was used at launch, switching
   the port in Settings left A and polled B's 3 hounds, and a relaunch
   without arguments went straight to B.
+  Phase 3 step 5 — `HellHoundsUITests` target (XCTest UI tests, in the
+  shared scheme, so the usual `xcodebuild test` command runs them too).
+  Every launch passes `-useFakeTransport YES`. Two tests: 6 fake hounds,
+  the 6th starts off screen, swipe until it's hittable, flip it and wait for
+  the fake's status to turn it on (others unchanged); and Settings can't
+  change the broker on the fake transport. Both fail when the switch is
+  wired to the wrong hound or the broker lock is removed. UI tests take
+  about 16 s.
 
 ## Phased plan
 
@@ -166,7 +174,7 @@ broker settings, Liquid Glass tab bar and styling, proper scrolling.
 2. ~~Discovery in `HoundStore` (wildcard, probe range 0..<8)~~ — done (session 4).
 3. ~~Device list cards, connection banner, `BatteryIndicator`~~ — done (session 4).
 4. ~~Settings tab, `AppModel`, `TabView` with Liquid Glass~~ — done (session 4).
-5. UI test target: 6 fake hounds, scroll to the 6th, toggle it.
+5. ~~UI test target: 6 fake hounds, scroll to the 6th, toggle it~~ — done (session 4).
 6. Manual check on local Mosquitto with `hound-sim -n 5`; update STATE.
 
 **Done when:** a UI test on the fake transport passes with 6 devices (more than
@@ -251,11 +259,9 @@ protocol.
 
 ## Next steps
 
-1. **Phase 3 step 5: UI test target** — launch with `-useFakeTransport YES
-   -fakeHoundCount 6`, scroll to `hound-5`, flip `hound-5-toggle`, check
-   it's on. The 6th card is off screen on an iPhone 17 Pro. Then step 6
-   (manual check with `hound-sim -n 5`, which session 4 already did for
-   discovery; repeat it on the finished UI).
+1. **Phase 3 step 6: manual check on the finished UI** — local Mosquitto
+   with `hound-sim -n 5` (launch with `-mqttHost localhost`): 5 cards, a
+   switch, a slider, the master card, then mark Phase 3 done.
    **Done when** a UI test on the fake transport passes with 6 devices and the
    app works against `hound-sim` on the local broker, including a 5th device
    (`hound-sim -n 5`) appearing without code changes.
