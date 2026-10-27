@@ -15,7 +15,8 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 **Phase 1 — Restructure + simulator: done (session 2).**
 **Phase 2 — MQTT layer + package review: done (session 3).**
-**Phase 3 — SwiftUI rewrite: in progress (session 4, steps 1–5 of 6 done).**
+**Phase 3 — SwiftUI rewrite: done (session 4).**
+**Phase 4 — Names and images: not started.**
 
 ## Done
 
@@ -133,6 +134,12 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   change the broker on the fake transport. Both fail when the switch is
   wired to the wrong hound or the broker lock is removed. UI tests take
   about 16 s.
+  Phase 3 step 6 — on local Mosquitto with `hound-sim -n 5`: 5 cards with
+  the sim's batteries (100/78/55/32/10); Hound 3's switch (`set-state 1` to
+  hound 2), Hound 2's slider (`set-level 92` to hound 1), the master slider
+  (`set-level 17` to all five) and the master switch (`set-state 0`, then
+  `set-state 1`, to all five), with the cards following the returned status.
+  Scrolled to the end, Hound 5 clears the tab bar. **Phase 3 done.**
 
 ## Phased plan
 
@@ -175,7 +182,7 @@ broker settings, Liquid Glass tab bar and styling, proper scrolling.
 3. ~~Device list cards, connection banner, `BatteryIndicator`~~ — done (session 4).
 4. ~~Settings tab, `AppModel`, `TabView` with Liquid Glass~~ — done (session 4).
 5. ~~UI test target: 6 fake hounds, scroll to the 6th, toggle it~~ — done (session 4).
-6. Manual check on local Mosquitto with `hound-sim -n 5`; update STATE.
+6. ~~Manual check on local Mosquitto with `hound-sim -n 5`~~ — done (session 4).
 
 **Done when:** a UI test on the fake transport passes with 6 devices (more than
 fit on screen), and the app works against `hound-sim`, including a 5th device
@@ -220,11 +227,11 @@ protocol.
 
 - **Q1** (blocks Phase 7): What can the firmware do? Waiting on the device
   code; assumed to be based on the board's MQTT sample code.
-- **Q2** (affects Phase 3): Do devices publish status on their own, or only in
+- **Q2** (affected Phase 3; handled by polling): Do devices publish status on their own, or only in
   response to `msg`? Partly answered 2026-10-26: a real hound published
   `status-json` (plus `status` and `BatStats`) right after `set-state`. Still unknown: whether hounds report at boot or on a
-  timer. The app polls each known index once per connect; if hounds turn out
-  to be poll-only, discovery falls back to probing indices 0..N.
+  timer. The app subscribes to `+/status-json` and polls indices 0–7 plus
+  every index seen, once per connect, so either answer works.
 - **Q3** (blocks Phase 7): Move to a private / authenticated broker?
 - **Q4** (blocks iCloud in Phase 4, and Phase 6): When to pay for the Apple
   Developer membership — user will pay once it becomes useful.
@@ -259,12 +266,13 @@ protocol.
 
 ## Next steps
 
-1. **Phase 3 step 6: manual check on the finished UI** — local Mosquitto
-   with `hound-sim -n 5` (launch with `-mqttHost localhost`): 5 cards, a
-   switch, a slider, the master card, then mark Phase 3 done.
-   **Done when** a UI test on the fake transport passes with 6 devices and the
-   app works against `hound-sim` on the local broker, including a 5th device
-   (`hound-sim -n 5`) appearing without code changes.
+1. **Start Phase 4 (names and images)** with a short plan. A SwiftData
+   model keyed by broker + hound index (a name, an SF Symbol or a photo),
+   because the index is all a hound tells us (Q1, Phase 7 may add a unique
+   ID). Rename and pick an icon from the card, show the name instead of
+   "Hound n", photos stored as external data. iCloud sync waits for Q4.
+   **Done when** a renamed device with a photo keeps both after relaunch
+   (covered by a test).
 2. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
 
 Manual testing: start Docker Desktop, then the local broker and sim as in
