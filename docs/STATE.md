@@ -206,7 +206,17 @@ Signing, bundle ID, privacy text, first build out.
    `NSLocalNetworkUsageDescription` for LAN brokers; app icon PNGs
    re-encoded without an alpha channel (they were already fully opaque).
    Checked in the built bundle. 40 unit + 2 UI tests pass.
-4. Real-device run from Xcode on the user's iPhone (iOS 26).
+4. ~~Real-device run~~ — done (session 5): the user signed Xcode in to the
+   paid account; `xcodebuild build -allowProvisioningUpdates` for the
+   iPhone 14 Pro (`00008120-0012425811E3C01E`) made the development
+   certificate and profile; installed with `devicectl device install app`
+   and launched with `devicectl device process launch --device <id>
+   --terminate-existing io.henryerinjones.HellHounds -- -useFakeTransport
+   YES` (app arguments go after `--`). Screenshot
+   (`devicectl device capture screenshot --destination …`, read by OCR):
+   All Hounds plus Hounds 1–4 with the fake's batteries 100/70/40/10, no
+   banner. Not checked on the phone: touching a control, or the public or a
+   LAN broker.
 5. App Store Connect app record (user), then archive and upload
    (`xcodebuild archive` / `-exportArchive`).
 6. Add the friend as an App Store Connect user and internal tester
@@ -277,8 +287,9 @@ protocol.
 
 ## Next steps
 
-1. **Phase 6 (TestFlight)** — step 4: run on the user's iPhone from
-   Xcode (needs the phone connected and Developer Mode on), then steps 5–6.
+1. **Phase 6 (TestFlight)** — step 5: the user creates the App Store
+   Connect app record for `io.henryerinjones.HellHounds`; then archive and
+   upload; then step 6.
 2. **Phase 4 (names and images)** after that, with a short plan. A SwiftData
    model keyed by broker + hound index (a name, an SF Symbol or a photo),
    because the index is all a hound tells us (Q1, Phase 7 may add a unique
