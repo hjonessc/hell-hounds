@@ -15,7 +15,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 **Phase 1 — Restructure + simulator: done (session 2).**
 **Phase 2 — MQTT layer + package review: done (session 3).**
-**Phase 3 — SwiftUI rewrite: in progress (session 4, steps 1–2 of 6 done).**
+**Phase 3 — SwiftUI rewrite: in progress (session 4, steps 1–3 of 6 done).**
 
 ## Done
 
@@ -101,6 +101,18 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   shows 5 hounds with the sim's batteries; a sim started at index 11 while
   the app was connected appeared as "Hound 12" and got `set-state 1` from
   its switch. `-useFakeTransport YES -fakeHoundCount 6` shows 6.
+  Phase 3 step 3 — cards: `HoundListView` is a scroll view of dark
+  blood-red cards (master "All Hounds" on top, then one per hound), each
+  with a switch, a send-on-release slider with its percentage, and the new
+  SwiftUI `BatteryIndicator` (red ≤ 20, yellow ≤ 40, green above, "?" when
+  unknown; 2 tests). A banner shows "Connecting…" or "Not connected" with a
+  Retry button; an empty state shows when connected with no hounds.
+  Accessibility IDs: `hound-<index>` / `hound-master` plus `-toggle` and
+  `-slider`, and `connection-banner`. With 6 hounds the 6th is off screen.
+  Fixed in `MQTTNIOTransport`: `connect()` during the backoff wait now
+  retries immediately (it used to do nothing while the store showed
+  "Connecting…"); checked by timing against Mosquitto (connected 0.6 s
+  after the tap, 6 s before the natural retry). Checked light and dark.
 
 ## Phased plan
 
@@ -140,8 +152,7 @@ broker settings, Liquid Glass tab bar and styling, proper scrolling.
 
 1. ~~SwiftUI `App` + interim list; UIKit, storyboards and old assets gone; Swift 6 mode~~ — done (session 4).
 2. ~~Discovery in `HoundStore` (wildcard, probe range 0..<8)~~ — done (session 4).
-3. Device list (cards, master on top, connection banner) and a SwiftUI
-   battery indicator.
+3. ~~Device list cards, connection banner, `BatteryIndicator`~~ — done (session 4).
 4. Settings tab (broker host/port in `@AppStorage`, launch args override,
    rebuild the transport on change); `TabView` with Liquid Glass; styling
    (keep the dark blood-red cards).
@@ -220,14 +231,15 @@ protocol.
   Sliders need a drag too and send on release. Launch with
   `xcrun simctl launch <id> io.henryerinjones.ChatExample -mqttHost localhost`.
 - `check_sim.py` uses a random prefix and is safe.
+- On MQTTNIO / NIOTransportServices a refused connection (no broker) fails
+  only after the 10 s connect timeout, so the app shows "Connecting…" for
+  10 s per attempt. Consider a shorter timeout with the settings work.
 
 ## Next steps
 
-1. **Phase 3 step 3: device list cards and battery indicator** (see the
-   Phase 3 plan above), then steps 4–6. Note for step 5: in the interim
-   plain list, 6 hounds plus the master still fit on an iPhone 17 Pro
-   screen; if the cards don't push the 6th off screen, use more fake hounds
-   (`-fakeHoundCount`) so the UI test really scrolls.
+1. **Phase 3 step 4: Settings tab and Liquid Glass** (see the Phase 3 plan
+   above), then steps 5–6. For step 5: with the cards, the 6th of 6 fake
+   hounds is off screen on an iPhone 17 Pro, so the UI test must scroll.
    **Done when** a UI test on the fake transport passes with 6 devices and the
    app works against `hound-sim` on the local broker, including a 5th device
    (`hound-sim -n 5`) appearing without code changes.
