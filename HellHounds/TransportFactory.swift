@@ -11,22 +11,20 @@ enum TransportFactory {
     /// Launch arguments, read through UserDefaults:
     /// - `-useFakeTransport YES`: in-process fake hounds, no network (also used under unit tests).
     ///   `-fakeHoundCount 6` sets how many (default 4).
-    /// - `-mqttHost localhost` (optionally `-mqttPort 1884`): a local broker instead of the public one.
-    @MainActor
-    static func makeTransport() -> any MQTTTransport {
-        let defaults = UserDefaults.standard
+    /// - `-mqttHost localhost` (optionally `-mqttPort 1884`): a local broker instead of the
+    ///   one in Settings; see `BrokerAddress.fromLaunchArguments`.
+    static var usesFakeTransport: Bool {
         let environment = ProcessInfo.processInfo.environment
         let isUnitTestHost = environment["XCTestConfigurationFilePath"] != nil || environment["XCTestSessionIdentifier"] != nil
-        if isUnitTestHost || defaults.bool(forKey: "useFakeTransport") {
-            return FakeMQTTTransport(hounds: FakeMQTTTransport.hounds(count: defaults.integer(forKey: "fakeHoundCount").nonZero ?? 4))
-        }
-        return MQTTNIOTransport(
-            host: defaults.string(forKey: "mqttHost") ?? "broker.hivemq.com",
-            port: defaults.integer(forKey: "mqttPort").nonZero ?? 1883
-        )
+        return isUnitTestHost || UserDefaults.standard.bool(forKey: "useFakeTransport")
     }
-}
 
-private extension Int {
-    var nonZero: Int? { self == 0 ? nil : self }
+    @MainActor
+    static func makeTransport(broker: BrokerAddress) -> any MQTTTransport {
+        if usesFakeTransport {
+            let count = UserDefaults.standard.integer(forKey: "fakeHoundCount")
+            return FakeMQTTTransport(hounds: FakeMQTTTransport.hounds(count: count == 0 ? 4 : count))
+        }
+        return MQTTNIOTransport(host: broker.host, port: broker.port)
+    }
 }

@@ -15,7 +15,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 
 **Phase 1 — Restructure + simulator: done (session 2).**
 **Phase 2 — MQTT layer + package review: done (session 3).**
-**Phase 3 — SwiftUI rewrite: in progress (session 4, steps 1–3 of 6 done).**
+**Phase 3 — SwiftUI rewrite: in progress (session 4, steps 1–4 of 6 done).**
 
 ## Done
 
@@ -113,6 +113,18 @@ discoverable, nameable and mockable. Requirements and founding decisions:
   retries immediately (it used to do nothing while the store showed
   "Connecting…"); checked by timing against Mosquitto (connected 0.6 s
   after the tap, 6 s before the natural retry). Checked light and dark.
+  Phase 3 step 4 — Settings and Liquid Glass: a `TabView` (Hounds,
+  Settings) with the iOS 26 floating tab bar (minimizes on scroll); the
+  connection banner uses `glassEffect`. `AppModel` owns the broker and the
+  `HoundStore`; changing the broker saves it (`brokerHost` / `brokerPort`
+  in UserDefaults) and replaces the store. `-mqttHost` or the fake
+  transport lock the broker (Settings fields disabled), so test runs can't
+  be switched to the public broker. MQTTNIO connect timeout 10 s → 5 s.
+  8 new tests (`BrokerAddress` parsing, launch args, `AppModel`
+  switching); 40 in all. Checked with two local brokers (1883 with 2
+  sim hounds, 1884 with 3): the stored broker was used at launch, switching
+  the port in Settings left A and polled B's 3 hounds, and a relaunch
+  without arguments went straight to B.
 
 ## Phased plan
 
@@ -153,9 +165,7 @@ broker settings, Liquid Glass tab bar and styling, proper scrolling.
 1. ~~SwiftUI `App` + interim list; UIKit, storyboards and old assets gone; Swift 6 mode~~ — done (session 4).
 2. ~~Discovery in `HoundStore` (wildcard, probe range 0..<8)~~ — done (session 4).
 3. ~~Device list cards, connection banner, `BatteryIndicator`~~ — done (session 4).
-4. Settings tab (broker host/port in `@AppStorage`, launch args override,
-   rebuild the transport on change); `TabView` with Liquid Glass; styling
-   (keep the dark blood-red cards).
+4. ~~Settings tab, `AppModel`, `TabView` with Liquid Glass~~ — done (session 4).
 5. UI test target: 6 fake hounds, scroll to the 6th, toggle it.
 6. Manual check on local Mosquitto with `hound-sim -n 5`; update STATE.
 
@@ -232,14 +242,20 @@ protocol.
   `xcrun simctl launch <id> io.henryerinjones.ChatExample -mqttHost localhost`.
 - `check_sim.py` uses a random prefix and is safe.
 - On MQTTNIO / NIOTransportServices a refused connection (no broker) fails
-  only after the 10 s connect timeout, so the app shows "Connecting…" for
-  10 s per attempt. Consider a shorter timeout with the settings work.
+  only at the connect timeout (now 5 s), so "Connecting…" shows that long.
+- The Simulator's app now has `localhost:1884` saved as its broker (from
+  session 4 testing). Launching without `-mqttHost` uses it, not the public
+  broker. Saved values don't show in `simctl spawn … defaults read`.
+- Simulator tool: after `select_all` in a text field, an edit menu covers
+  the row below; press the right-arrow key to dismiss it before tapping.
 
 ## Next steps
 
-1. **Phase 3 step 4: Settings tab and Liquid Glass** (see the Phase 3 plan
-   above), then steps 5–6. For step 5: with the cards, the 6th of 6 fake
-   hounds is off screen on an iPhone 17 Pro, so the UI test must scroll.
+1. **Phase 3 step 5: UI test target** — launch with `-useFakeTransport YES
+   -fakeHoundCount 6`, scroll to `hound-5`, flip `hound-5-toggle`, check
+   it's on. The 6th card is off screen on an iPhone 17 Pro. Then step 6
+   (manual check with `hound-sim -n 5`, which session 4 already did for
+   discovery; repeat it on the finished UI).
    **Done when** a UI test on the fake transport passes with 6 devices and the
    app works against `hound-sim` on the local broker, including a 5th device
    (`hound-sim -n 5`) appearing without code changes.

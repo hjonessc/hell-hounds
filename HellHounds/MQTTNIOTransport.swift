@@ -41,7 +41,10 @@ final class MQTTNIOTransport: MQTTTransport {
             versionConfiguration: .v3_1_1(
                 will: .init(topicName: "/will", payload: ByteBuffer(string: "dieout"), qos: .atMostOnce)
             ),
-            keepAliveInterval: .seconds(60)
+            keepAliveInterval: .seconds(60),
+            // Over NIOTransportServices a refused connection only fails at this
+            // timeout (default 10 s), and the banner shows "Connecting…" until then.
+            connectTimeout: .seconds(5)
         )
     }
 

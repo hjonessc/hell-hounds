@@ -148,7 +148,7 @@ private struct ConnectionBanner: View {
                 }
             }
             .padding()
-            .background(.thinMaterial, in: .rect(cornerRadius: 20))
+            .glassEffect(.regular, in: .rect(cornerRadius: 20))
             .accessibilityIdentifier("connection-banner")
             .transition(.move(edge: .top).combined(with: .opacity))
         }
