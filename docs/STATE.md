@@ -16,7 +16,8 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 **Phase 1 — Restructure + simulator: done (session 2).**
 **Phase 2 — MQTT layer + package review: done (session 3).**
 **Phase 3 — SwiftUI rewrite: done (session 4).**
-**Phase 4 — Names and images: in progress (session 6).**
+**Phase 4 — Names and images: done (session 6).** Sync in Production
+(TestFlight) not yet seen.
 **Phase 5 — README: not started (skipped for now).**
 **Phase 6 — TestFlight: done (session 5).** Taken ahead of Phases 4–5 once
 the user paid for the Apple Developer membership (Q4).
@@ -174,9 +175,10 @@ Plan (session 6; the user chose iCloud sync in this phase):
    store, so test data never syncs.
 4. ~~Tests~~ — done (session 6): a profile written to an on-disk store survives reopening it;
    duplicate resolution; a UI test renames a fake hound and relaunches.
-5. Device check (two devices or device + Simulator signed in to the same
-   iCloud account), then the user deploys the CloudKit schema to
-   production in CloudKit Console before the next TestFlight build.
+5. ~~Device check and schema deploy~~ — done (session 6): phone →
+   Simulator sync checked (below); the user deployed the schema
+   (`CD_HoundProfile`) to Production in CloudKit Console; build 1.0 (2)
+   uploaded with the usual archive/export commands.
 
 Session 6 detail: `HoundProfile.swift` (model, `HoundLook`,
 `ModelContext.saveLook`), `ProfileStore.swift` (CloudKit store
@@ -340,14 +342,14 @@ protocol.
 
 ## Next steps
 
-1. **Finish Phase 4, step 5.** Phone → Simulator sync is checked (name,
-   symbol, photo); optionally check Simulator → phone the same way (both
-   on `-mqttHost <Mac's LAN IP>`, never the public broker; relaunch the
-   Simulator to fetch). Then the user deploys the schema
-   (record type `CD_HoundProfile`) from Development to Production in
-   CloudKit Console (icloud.developer.apple.com) — TestFlight builds use
-   Production and won't sync until then. Bump the build number and upload
-   build 1.0 (2).
+1. **Check build 1.0 (2) on TestFlight** (uploaded 2026-10-28 00:13;
+   Apple's processing not watched). Once processed, make sure it's in the
+   internal group "All", install it on two devices signed in to the same
+   iCloud account, and check that a rename syncs in Production. The IPA
+   went straight to App Store Connect (no local copy), so its distribution
+   entitlements (`aps-environment` = production, CloudKit environment
+   Production) weren't inspected. Optional: Simulator → phone sync on the
+   dev build.
 2. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
 
 Manual testing: start Docker Desktop, then the local broker and sim as in
@@ -363,7 +365,8 @@ xcodebuild test -project HellHounds.xcodeproj -scheme HellHounds -destination "p
 ```
 
 Uploading a TestFlight build (bump `CURRENT_PROJECT_VERSION` in both app
-configurations first; build 1 is used):
+configurations first; builds 1 and 2 are used; after any change to
+`HoundProfile`, deploy the schema to Production in CloudKit Console first):
 
 ```bash
 xcodebuild archive -project HellHounds.xcodeproj -scheme HellHounds -configuration Release -destination "generic/platform=iOS" -archivePath build/HellHounds.xcarchive -allowProvisioningUpdates
