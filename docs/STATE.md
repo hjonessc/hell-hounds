@@ -205,9 +205,11 @@ no iCloud account (`CKAccountStatusNoAccount`, the store still opens, it
 just doesn't sync); after signing in, CloudKit setup took ~30 s (zone save).
 A rename on the phone ("Hound Renamed", hound index 2) reached the
 Simulator after a relaunch (the Simulator gets no pushes), checked in its
-`Profiles.store` with sqlite3 and on screen. Not yet seen synced: a photo,
-the reverse direction (Simulator → phone), and live updates through push
-on the phone.
+`Profiles.store` with sqlite3 and on screen. Then a symbol (hound 1,
+`tortoise.fill`) and a photo (hound 0, 43,670 bytes — under SwiftData's
+external-storage threshold, so stored inline) set on the phone also
+arrived, and the cards showed them. Not yet seen: the reverse direction
+(Simulator → phone) and live updates through push on the phone.
 
 **Done when:** a renamed device with a photo keeps both after relaunch
 (covered by a test).
@@ -338,11 +340,10 @@ protocol.
 
 ## Next steps
 
-1. **Finish Phase 4, step 5: check iCloud sync on real devices.** Run the
-   development build on the iPhone (and a second device or a Simulator
-   signed in to the same iCloud account) against a LAN broker
-   (`-mqttHost <Mac's LAN IP>`), never the public one. Rename a hound on
-   one and wait for it on the other. Then the user deploys the schema
+1. **Finish Phase 4, step 5.** Phone → Simulator sync is checked (name,
+   symbol, photo); optionally check Simulator → phone the same way (both
+   on `-mqttHost <Mac's LAN IP>`, never the public broker; relaunch the
+   Simulator to fetch). Then the user deploys the schema
    (record type `CD_HoundProfile`) from Development to Production in
    CloudKit Console (icloud.developer.apple.com) — TestFlight builds use
    Production and won't sync until then. Bump the build number and upload
