@@ -196,8 +196,18 @@ title fallback, fake broker key, downscale to 512×256) — 46 in all; UI
 test `testRenamedHoundKeepsItsNameAfterRelaunch` (fails with an in-memory
 store) — 3 UI tests. Checked by hand in the Simulator on the fake
 transport: picked the flame symbol and a photo, named the hound, saved,
-relaunched; the card kept the photo and name. CloudKit sync itself is not
-checked yet (step 5).
+relaunched; the card kept the photo and name.
+Step 5 so far (session 6): local Mosquitto reachable on the LAN
+(`192.168.1.92:1883`, Docker publishes on all interfaces) with
+`hound-sim -n 3`; the iPhone dev build and the Simulator both launched with
+`-mqttHost 192.168.1.92` (same broker key on both). The Simulator first had
+no iCloud account (`CKAccountStatusNoAccount`, the store still opens, it
+just doesn't sync); after signing in, CloudKit setup took ~30 s (zone save).
+A rename on the phone ("Hound Renamed", hound index 2) reached the
+Simulator after a relaunch (the Simulator gets no pushes), checked in its
+`Profiles.store` with sqlite3 and on screen. Not yet seen synced: a photo,
+the reverse direction (Simulator → phone), and live updates through push
+on the phone.
 
 **Done when:** a renamed device with a photo keeps both after relaunch
 (covered by a test).
