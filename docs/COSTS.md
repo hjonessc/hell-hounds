@@ -3,3 +3,4 @@
 - 2026-10-26 · session 2 · $4.36 · API 13m / wall 19m · Opus 5.5: 7.1k out, 11.6M cache read, 116.4k cache write
 - 2026-10-26 · session 3 · $10.43 · API 23m / wall 1m (as reported) · Opus 5.5: 116.5k out, 30.1M cache read, 251.4k cache write
 - 2026-10-27 · session 4 · $11.26 · API 22m / wall 31m (as reported) · Opus 5.5: 7k out, 30.1M cache read, 354.1k cache write
+- 2026-10-28 · session 5 · $3.42 · API 8m / wall 14m (as reported) · Opus 5.5: 33k out, 6.8M cache read, 172.5k cache write

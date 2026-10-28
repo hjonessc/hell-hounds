@@ -1,6 +1,6 @@
 # Project state
 
-_Last updated: 2026-10-27 (session 5)_
+_Last updated: 2026-10-28 (session 5)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
@@ -27,43 +27,11 @@ the user paid for the Apple Developer membership (Q4).
   PROTOCOL.md (on the wire `"1"` = on, `"0"` = off, correcting ADR 0001),
   `tools/hound-sim/`, the top-level Xcode project, leftovers deleted, clean
   clone checked against the sim — see tag `m1` and git history for detail.
-- **Session 3 (2026-10-26):** Phase 2 step 1 — researched MQTT libraries and
-  wrote [ADR 0002](decisions/0002-mqtt-client-library.md):
-  switch to MQTTNIO 3 (pin `3.0.0-rc.1`) behind our own `MQTTTransport`
-  protocol, with CocoaMQTT 2.4.1 as the fallback.
-  User accepted it. Phase 2 step 2 — pulled the protocol out of
-  `ViewController.swift`: `MQTTTransport` (events as an `AsyncStream`),
-  `HoundProtocol` (topics, payloads, tolerant `status-json` parsing),
-  `@Observable HoundStore`, and an interim `CocoaMQTTTransport` adapter. The
-  view controller now redraws through UIKit's `updateProperties()`
-  observation tracking. Checked in Simulator against `hound-sim --escaped`:
-  4 hounds with the right batteries, a switch (`set-state 1`), a slider
-  (`set-level 92`), the Master slider (`set-level 81` to all four) and the Master
-  switch (`set-state 0` to all four), with the cards updating from the returned status.
-  Phase 2 step 3 — `MQTTNIOTransport` (MQTTNIO `3.0.0-rc.1` plus `NIOCore` /
-  `NIOTransportServices`; CocoaMQTT package and adapter removed; reconnect
-  loop with 1–30 s backoff; disconnect on background, reconnect on
-  foreground). The app takes `-mqttHost` / `-mqttPort` launch arguments for a
-  local broker (see `tools/hound-sim/README.md`). Checked on local Mosquitto
-  with `hound-sim --escaped`: 4 hounds, switch (`set-state 1`), slider
-  (`set-level 88`), Master switch (`set-state 0` to all four), reconnect after
-  a broker restart and after a trip to the background, plus a 150 ms delay
-  proxy. A "subscription bug" reported mid-session was a misread screenshot
-  (pixel check: no card was ever dimmed). While testing on the public broker a
-  **real hound 1 was live** and got test commands; it was turned back off
-  (`set-state 0`, confirmed by its status). Its level is still 81 from a test;
-  the original level isn't known. See PROTOCOL.md "Seen from a real hound".
-  Phase 2 step 4 — `FakeMQTTTransport` in the app (in-process hounds that
-  answer like the real firmware: boolean `ledState`, status after a poll and
-  after every command, `reportsStatusAfterCommands` to switch that off for
-  Q2), a `HellHoundsTests` unit-test target (Swift Testing, hosted by the
-  app) and a shared `HellHounds` scheme. 25 tests: protocol topics/payloads,
-  status parsing, topic-filter matching, and `HoundStore` round trips
-  (status, set-state, set-level, master, drop + reconnect, poll-only
-  hounds). Swapping the on/off payload makes 11 of them fail, as it should.
-  The app uses the fake transport when hosting tests or launched with
-  `-useFakeTransport YES`; the test run made no network connections.
-  **Phase 2 done.**
+- **Session 3 (2026-10-26), Phase 2:** ADR 0002 (MQTTNIO 3 behind our own
+  `MQTTTransport`), `HoundProtocol` and `@Observable HoundStore` out of the
+  view controller, `MQTTNIOTransport` with reconnect (CocoaMQTT removed),
+  `FakeMQTTTransport`, the unit-test target and shared scheme — see tag
+  `m2` and git history for detail.
 - **Session 4 (2026-10-26/27):** Phase 3 step 1 — the app is SwiftUI now:
   `HellHoundsApp` owns the `HoundStore`, connects when the scene is active
   and disconnects in the background (`scenePhase`); `TransportFactory` keeps
@@ -126,6 +94,17 @@ the user paid for the Apple Developer membership (Q4).
   (`set-level 17` to all five) and the master switch (`set-state 0`, then
   `set-state 1`, to all five), with the cards following the returned status.
   Scrolled to the end, Hound 5 clears the tab bar. **Phase 3 done.**
+- **Session 5 (2026-10-27/28), Phase 6:** the user paid for the Apple
+  Developer membership, so TestFlight was taken ahead of Phases 4–5. New
+  bundle ID `io.henryerinjones.HellHounds`; `PrivacyInfo.xcprivacy`
+  (UserDefaults, CA92.1), `ITSAppUsesNonExemptEncryption = NO`, a
+  local-network usage string; icon PNGs without an alpha channel. First run
+  on the user's iPhone 14 Pro on the fake transport (checked by screenshot
+  and OCR). The user registered the explicit App ID and created the App
+  Store Connect record; build 1.0 (1) archived and uploaded with
+  `tools/testflight/ExportOptions.plist`; the user and one friend
+  (internal testers) both installed it from TestFlight. **Phase 6 done.**
+  Detail in the Phase 6 plan below.
 
 ## Phased plan
 
@@ -292,17 +271,24 @@ protocol.
 - The tab bar's minimize-on-scroll (`.tabBarMinimizeBehavior(.onScrollDown)`)
   wasn't seen to minimize in the short lists tested; not investigated.
 - MQTTNIO is still pinned to `3.0.0-rc.1` (ADR 0002).
+- TestFlight installs start on the public broker, so testers control the
+  real hounds (the user's choice, session 5).
+- A development build run from Xcode and the TestFlight build share the
+  bundle ID, so installing one on a phone replaces the other.
 
 ## Next steps
 
-1. **Start Phase 4 (names and images)** with a short plan. iCloud sync is
-   unblocked now (Q4). A SwiftData
+1. **Start Phase 4 (names and images)** with a short plan. A SwiftData
    model keyed by broker + hound index (a name, an SF Symbol or a photo),
    because the index is all a hound tells us (Q1, Phase 7 may add a unique
    ID). Rename and pick an icon from the card, show the name instead of
-   "Hound n", photos stored as external data. iCloud sync waits for Q4.
-   **Done when** a renamed device with a photo keeps both after relaunch
-   (covered by a test).
+   "Hound n", photos stored as external data. iCloud sync is unblocked now
+   (Q4): it needs the iCloud/CloudKit capability on the
+   `io.henryerinjones.HellHounds` App ID (automatic signing should add it)
+   and a CloudKit-compatible model (optional or defaulted properties, no
+   unique constraints). Decide with the user whether sync is in Phase 4 or
+   a follow-up. **Done when** a renamed device with a photo keeps both
+   after relaunch (covered by a test).
 2. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
 
 Manual testing: start Docker Desktop, then the local broker and sim as in
