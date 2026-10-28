@@ -1,6 +1,6 @@
 # Project state
 
-_Last updated: 2026-10-27 (session 6)_
+_Last updated: 2026-10-28 (session 6)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
@@ -30,72 +30,12 @@ the user paid for the Apple Developer membership (Q4).
   `tools/hound-sim/`, the top-level Xcode project, leftovers deleted, clean
   clone checked against the sim — see tag `m1` and git history for detail.
 - **Session 3 (2026-10-26), Phase 2:** ADR 0002 (MQTTNIO 3 behind our own
-  `MQTTTransport`), `HoundProtocol` and `@Observable HoundStore` out of the
-  view controller, `MQTTNIOTransport` with reconnect (CocoaMQTT removed),
-  `FakeMQTTTransport`, the unit-test target and shared scheme — see tag
-  `m2` and git history for detail.
-- **Session 4 (2026-10-26/27):** Phase 3 step 1 — the app is SwiftUI now:
-  `HellHoundsApp` owns the `HoundStore`, connects when the scene is active
-  and disconnects in the background (`scenePhase`); `TransportFactory` keeps
-  the launch-argument rules. An interim plain `HoundListView` (master row plus
-  one row per hound; slider sends on release). Deleted the storyboards,
-  `AppDelegate`, `ViewController`, the UIKit `BatteryView` and every image
-  set except the app icon; generated launch screen and scene manifest.
-  Swift 6 language mode on for both targets (no warnings). 25 tests pass.
-  Checked `-useFakeTransport YES` (4 hounds, batteries 100/70/40/10) and,
-  on local Mosquitto with `hound-sim --escaped`: slider (`set-level 84`),
-  a switch (`set-state 0`), master switch (`set-state 1` to all four), the
-  rows matching the returned status (pixel check), and a disconnect in the
-  background with reconnect and re-poll on return.
-  Phase 3 step 2 — discovery: `HoundStore` starts empty, subscribes to
-  `HellHounds-MQTT/+/status-json` and adds a hound (sorted by index) the
-  first time it reports; every connect polls the probe range 0..<8 plus the
-  indices already seen. `statusIndex` accepts digits only (rejects `-1`,
-  `+1`, empty). `-fakeHoundCount N` sets the fake's hound count (batteries
-  spread 100→10 like `hound-sim`). 30 tests (new: discovery, ordering,
-  out-of-range self-reporter, malformed topics); removing the digits-only
-  check fails two of them. Checked on local Mosquitto: `hound-sim -n 5`
-  shows 5 hounds with the sim's batteries; a sim started at index 11 while
-  the app was connected appeared as "Hound 12" and got `set-state 1` from
-  its switch. `-useFakeTransport YES -fakeHoundCount 6` shows 6.
-  Phase 3 step 3 — cards: `HoundListView` is a scroll view of dark
-  blood-red cards (master "All Hounds" on top, then one per hound), each
-  with a switch, a send-on-release slider with its percentage, and the new
-  SwiftUI `BatteryIndicator` (red ≤ 20, yellow ≤ 40, green above, "?" when
-  unknown; 2 tests). A banner shows "Connecting…" or "Not connected" with a
-  Retry button; an empty state shows when connected with no hounds.
-  Accessibility IDs: `hound-<index>` / `hound-master` plus `-toggle` and
-  `-slider`, and `connection-banner`. With 6 hounds the 6th is off screen.
-  Fixed in `MQTTNIOTransport`: `connect()` during the backoff wait now
-  retries immediately (it used to do nothing while the store showed
-  "Connecting…"); checked by timing against Mosquitto (connected 0.6 s
-  after the tap, 6 s before the natural retry). Checked light and dark.
-  Phase 3 step 4 — Settings and Liquid Glass: a `TabView` (Hounds,
-  Settings) with the iOS 26 floating tab bar (minimizes on scroll); the
-  connection banner uses `glassEffect`. `AppModel` owns the broker and the
-  `HoundStore`; changing the broker saves it (`brokerHost` / `brokerPort`
-  in UserDefaults) and replaces the store. `-mqttHost` or the fake
-  transport lock the broker (Settings fields disabled), so test runs can't
-  be switched to the public broker. MQTTNIO connect timeout 10 s → 5 s.
-  8 new tests (`BrokerAddress` parsing, launch args, `AppModel`
-  switching); 40 in all. Checked with two local brokers (1883 with 2
-  sim hounds, 1884 with 3): the stored broker was used at launch, switching
-  the port in Settings left A and polled B's 3 hounds, and a relaunch
-  without arguments went straight to B.
-  Phase 3 step 5 — `HellHoundsUITests` target (XCTest UI tests, in the
-  shared scheme, so the usual `xcodebuild test` command runs them too).
-  Every launch passes `-useFakeTransport YES`. Two tests: 6 fake hounds,
-  the 6th starts off screen, swipe until it's hittable, flip it and wait for
-  the fake's status to turn it on (others unchanged); and Settings can't
-  change the broker on the fake transport. Both fail when the switch is
-  wired to the wrong hound or the broker lock is removed. UI tests take
-  about 16 s.
-  Phase 3 step 6 — on local Mosquitto with `hound-sim -n 5`: 5 cards with
-  the sim's batteries (100/78/55/32/10); Hound 3's switch (`set-state 1` to
-  hound 2), Hound 2's slider (`set-level 92` to hound 1), the master slider
-  (`set-level 17` to all five) and the master switch (`set-state 0`, then
-  `set-state 1`, to all five), with the cards following the returned status.
-  Scrolled to the end, Hound 5 clears the tab bar. **Phase 3 done.**
+  `MQTTTransport`), `HoundStore`, fake transport, unit tests — see tag `m2`.
+- **Session 4 (2026-10-26/27), Phase 3:** SwiftUI app, discovery (probe
+  0..<8 plus `+/status-json`), cards with `BatteryIndicator`, connection
+  banner, Settings tab with broker switching (`AppModel`), Liquid Glass tab
+  bar, UI test target, check against `hound-sim -n 5` — see tag `m3` and
+  git history for detail.
 - **Session 5 (2026-10-27/28), Phase 6:** the user paid for the Apple
   Developer membership, so TestFlight was taken ahead of Phases 4–5. New
   bundle ID `io.henryerinjones.HellHounds`; `PrivacyInfo.xcprivacy`
@@ -107,6 +47,15 @@ the user paid for the Apple Developer membership (Q4).
   `tools/testflight/ExportOptions.plist`; the user and one friend
   (internal testers) both installed it from TestFlight. **Phase 6 done.**
   Detail in the Phase 6 plan below.
+- **Session 6 (2026-10-27/28), Phase 4:** the user chose iCloud sync in
+  this phase. `HoundProfile` (SwiftData, CloudKit-compatible, keyed by
+  broker + index), edit sheet from each card (name, 16 symbols, photo
+  downscaled to 512 px), CloudKit + push entitlements, `HellHounds/Info.plist`
+  for the remote-notification background mode. 46 unit + 3 UI tests.
+  Sync checked phone ↔ Simulator on local Mosquitto over the LAN, then the
+  user deployed the schema to Production, build 1.0 (2) was uploaded, and
+  the user saw a name and photo sync between two TestFlight installs.
+  **Phase 4 done.** Detail in the Phase 4 plan below.
 
 ## Phased plan
 
@@ -344,10 +293,20 @@ protocol.
 
 ## Next steps
 
-1. **Photo crop (user request, session 6):** the photo picker takes the
-   whole image; let the user zoom and move it inside the circle before
-   saving. Next phase to pick after that: 5 (README) or 7/8 when unblocked.
-2. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
+1. **Photo crop (user request, session 6; the user deferred it, so ask
+   before starting).** Today `HoundEditSheet` keeps the whole photo and
+   the card fills its circle from the centre. Proposed (about an hour):
+   after picking, a crop screen with the photo behind a circle outline,
+   pinch to zoom and drag to move (clamped so the circle stays filled),
+   Cancel / Choose; crop on Choose to the square inside the circle at
+   512 px, so `photoData` and the CloudKit schema don't change. Unit test
+   the crop maths (zoom + offset → source rect). Trade-off told to the
+   user: re-cropping means re-picking the photo; keeping the original plus
+   zoom/offset would allow re-editing but syncs larger photos and needs a
+   schema change and deploy.
+2. Then pick the next phase: 5 (README with screenshots from UI tests) is
+   unblocked; 7 waits on Q1/Q3, 8 on Q5.
+3. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
 
 Manual testing: start Docker Desktop, then the local broker and sim as in
 `tools/hound-sim/README.md`, and launch with `-mqttHost localhost`. Never on
