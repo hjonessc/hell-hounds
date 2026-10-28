@@ -18,8 +18,8 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 **Phase 3 — SwiftUI rewrite: done (session 4).**
 **Phase 4 — Names and images: not started (skipped for now).**
 **Phase 5 — README: not started (skipped for now).**
-**Phase 6 — TestFlight: in progress (session 5).** The user paid for the
-Apple Developer membership (Q4), so this phase is unblocked and taken next.
+**Phase 6 — TestFlight: done (session 5).** Taken ahead of Phases 4–5 once
+the user paid for the Apple Developer membership (Q4).
 
 ## Done
 
@@ -225,8 +225,10 @@ Signing, bundle ID, privacy text, first build out.
    [`tools/testflight/ExportOptions.plist`](../tools/testflight/ExportOptions.plist)
    (commands under "Uploading a TestFlight build" below). Apple's
    processing of the build wasn't watched.
-6. Add the friend as an App Store Connect user and internal tester
-   (user); they install from TestFlight.
+6. ~~Testers~~ — done (session 5): build 1.0 (1) is "Testing" in the
+   internal group "All" with the user and one friend (both App Store
+   Connect users); both installed from TestFlight. Tip: the TestFlight
+   invites went to the spam folder.
 
 **Done when:** a friend installs the app from TestFlight.
 
@@ -293,18 +295,15 @@ protocol.
 
 ## Next steps
 
-1. **Phase 6 (TestFlight)** — step 6: once build 1 has finished
-   processing in App Store Connect, the user adds the friend as an App
-   Store Connect user and internal tester; the friend installs from
-   TestFlight. That closes Phase 6.
-2. **Phase 4 (names and images)** after that, with a short plan. A SwiftData
+1. **Start Phase 4 (names and images)** with a short plan. iCloud sync is
+   unblocked now (Q4). A SwiftData
    model keyed by broker + hound index (a name, an SF Symbol or a photo),
    because the index is all a hound tells us (Q1, Phase 7 may add a unique
    ID). Rename and pick an icon from the card, show the name instead of
    "Hound n", photos stored as external data. iCloud sync waits for Q4.
    **Done when** a renamed device with a photo keeps both after relaunch
    (covered by a test).
-3. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
+2. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
 
 Manual testing: start Docker Desktop, then the local broker and sim as in
 `tools/hound-sim/README.md`, and launch with `-mqttHost localhost`. Never on
