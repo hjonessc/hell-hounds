@@ -38,6 +38,11 @@ final class AppModel {
         store = HoundStore(transport: makeTransport(broker))
     }
 
+    /// Which hound profiles (names and looks) belong to this broker.
+    var profileBrokerKey: String {
+        HoundProfile.brokerKey(for: broker, usesFakeTransport: usesFakeTransport)
+    }
+
     /// Saves `newBroker` and connects to it, dropping the current connection.
     func useBroker(_ newBroker: BrokerAddress) {
         guard !isBrokerLocked, newBroker != broker else { return }

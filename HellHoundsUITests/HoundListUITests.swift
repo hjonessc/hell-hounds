@@ -13,13 +13,23 @@ final class HoundListUITests: XCTestCase {
     }
 
     /// Always the in-process fake: UI tests must never reach a broker
-    /// (real hounds are live on the public one).
+    /// (real hounds are live on the public one). Profiles start empty
+    /// unless `resetProfiles` is false (a relaunch).
     @MainActor
-    private func launch(houndCount: Int) -> XCUIApplication {
+    private func launch(houndCount: Int, resetProfiles: Bool = true) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-useFakeTransport", "YES", "-fakeHoundCount", String(houndCount)]
+        if resetProfiles {
+            app.launchArguments += ["-resetProfiles", "YES"]
+        }
         app.launch()
         return app
+    }
+
+    @MainActor
+    private func waitForLabel(_ label: String, of element: XCUIElement, timeout: TimeInterval = 5) -> Bool {
+        let predicate = NSPredicate(format: "label == %@", label)
+        return XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: element)], timeout: timeout) == .completed
     }
 
     @MainActor
@@ -41,7 +51,7 @@ final class HoundListUITests: XCTestCase {
             app.swipeUp()
         }
         XCTAssertTrue(sixth.isHittable, "scrolling never reached the 6th hound")
-        XCTAssertTrue(app.staticTexts["Hound 6"].exists)
+        XCTAssertEqual(app.buttons["hound-5-edit"].label, "Edit Hound 6")
         XCTAssertEqual(sixth.value as? String, "0")
 
         sixth.tap()
@@ -49,6 +59,28 @@ final class HoundListUITests: XCTestCase {
         // The fake hound answers with its status; the switch follows that, not the tap.
         XCTAssertTrue(waitForValue("1", of: sixth), "the 6th hound didn't report itself on")
         XCTAssertEqual(app.switches["hound-4-toggle"].value as? String, "0", "only the 6th hound should change")
+    }
+
+    @MainActor
+    func testRenamedHoundKeepsItsNameAfterRelaunch() {
+        var app = launch(houndCount: 2)
+        let edit = app.buttons["hound-1-edit"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5), "the second hound never appeared")
+        edit.tap()
+
+        let name = app.textFields["edit-name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        name.tap()
+        name.typeText("Fang")
+        app.buttons["edit-save"].tap()
+
+        // The card's title is its edit button's label.
+        XCTAssertTrue(waitForLabel("Edit Fang", of: app.buttons["hound-1-edit"]))
+        XCTAssertEqual(app.buttons["hound-0-edit"].label, "Edit Hound 1", "only the second hound should be renamed")
+
+        app.terminate()
+        app = launch(houndCount: 2, resetProfiles: false)
+        XCTAssertTrue(waitForLabel("Edit Fang", of: app.buttons["hound-1-edit"]), "the name didn't survive a relaunch")
     }
 
     @MainActor

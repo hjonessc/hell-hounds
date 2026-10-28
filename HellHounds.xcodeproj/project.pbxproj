@@ -35,9 +35,22 @@
 		C3D0C0DE0000000000000001 /* HellHoundsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HellHoundsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E4D0C0DE0000000000000001 /* Exceptions for "HellHounds" folder in "HellHounds" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 476A1638E37B23A4EB0A1F73 /* HellHounds */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		774BBF85559254791BA0D04D /* HellHounds */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E4D0C0DE0000000000000001 /* Exceptions for "HellHounds" folder in "HellHounds" target */,
+			);
 			explicitFileTypes = {
 			};
 			explicitFolders = (
@@ -288,12 +301,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = HellHounds/HellHounds.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = K4BXBW45T2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Hellhounds;
+				INFOPLIST_FILE = HellHounds/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Hellhounds connects to an MQTT broker on your local network when you set one in Settings.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -434,12 +449,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = HellHounds/HellHounds.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = K4BXBW45T2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Hellhounds;
+				INFOPLIST_FILE = HellHounds/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Hellhounds connects to an MQTT broker on your local network when you set one in Settings.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

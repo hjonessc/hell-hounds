@@ -1,6 +1,6 @@
 # Project state
 
-_Last updated: 2026-10-28 (session 5)_
+_Last updated: 2026-10-27 (session 6)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
@@ -16,7 +16,7 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 **Phase 1 — Restructure + simulator: done (session 2).**
 **Phase 2 — MQTT layer + package review: done (session 3).**
 **Phase 3 — SwiftUI rewrite: done (session 4).**
-**Phase 4 — Names and images: not started (skipped for now).**
+**Phase 4 — Names and images: in progress (session 6).**
 **Phase 5 — README: not started (skipped for now).**
 **Phase 6 — TestFlight: done (session 5).** Taken ahead of Phases 4–5 once
 the user paid for the Apple Developer membership (Q4).
@@ -155,8 +155,49 @@ appearing without code changes.
 
 ### Phase 4 — Names and images
 
-Rename devices, pick an SF Symbol or photo, persisted locally (SwiftData);
-iCloud sync once the developer membership is paid (Q4).
+Rename devices, pick an SF Symbol or photo, persisted with SwiftData and
+synced through iCloud (CloudKit).
+
+Plan (session 6; the user chose iCloud sync in this phase):
+
+1. ~~`HoundProfile` SwiftData model~~ — done (session 6): broker key (`host:port`, or `fake` on
+   the fake transport so test names never mix with real hounds), hound
+   index, optional name, SF Symbol and photo (external storage, downscaled
+   JPEG), `modifiedAt`. CloudKit rules: every property optional or
+   defaulted, no `@Attribute(.unique)`; duplicates (two devices naming the
+   same hound offline) resolve to the newest `modifiedAt`.
+2. ~~Edit sheet~~ — done (session 6): tap a card's icon or name to open it (name, symbol grid, photo picker, reset); the
+   card shows the name and the photo or symbol instead of "Hound n".
+3. ~~iCloud~~ — done (session 6): CloudKit container `iCloud.io.henryerinjones.HellHounds`,
+   push entitlement and the remote-notification background mode. Real
+   runs use the CloudKit store; the fake transport and tests use a local
+   store, so test data never syncs.
+4. ~~Tests~~ — done (session 6): a profile written to an on-disk store survives reopening it;
+   duplicate resolution; a UI test renames a fake hound and relaunches.
+5. Device check (two devices or device + Simulator signed in to the same
+   iCloud account), then the user deploys the CloudKit schema to
+   production in CloudKit Console before the next TestFlight build.
+
+Session 6 detail: `HoundProfile.swift` (model, `HoundLook`,
+`ModelContext.saveLook`), `ProfileStore.swift` (CloudKit store
+`.private("iCloud.io.henryerinjones.HellHounds")`, falling back to a local
+store if it can't open; the fake transport uses
+`Application Support/FakeProfiles/`, emptied by `-resetProfiles YES`),
+`HoundEditSheet.swift` (name, `PhotosPicker`, 16-symbol grid, reset; photos
+redrawn at ≤ 512 px JPEG, which also drops location metadata).
+`HellHounds.entitlements` (CloudKit + `aps-environment`) and
+`HellHounds/Info.plist` (only `UIBackgroundModes` = remote-notification,
+merged with the generated plist; excluded from the synchronized group's
+resources). A signed device build (`-allowProvisioningUpdates`) put the
+container in the provisioning profile, so the App ID has iCloud and push.
+Tests: 6 new unit tests (reopen an on-disk store with name + 200 KB photo,
+update not duplicate, newest duplicate wins and saving drops the rest,
+title fallback, fake broker key, downscale to 512×256) — 46 in all; UI
+test `testRenamedHoundKeepsItsNameAfterRelaunch` (fails with an in-memory
+store) — 3 UI tests. Checked by hand in the Simulator on the fake
+transport: picked the flame symbol and a photo, named the hound, saved,
+relaunched; the card kept the photo and name. CloudKit sync itself is not
+checked yet (step 5).
 
 **Done when:** a renamed device with a photo keeps both after relaunch
 (covered by a test).
@@ -275,20 +316,27 @@ protocol.
   real hounds (the user's choice, session 5).
 - A development build run from Xcode and the TestFlight build share the
   bundle ID, so installing one on a phone replaces the other.
+- Hound names are keyed by broker (`host:port`) and index, so the same
+  hound reached through another address (an IP instead of a host name)
+  shows its default name.
+- Simulator tool: typing into a text field right after tapping it can drop
+  characters ("Cerberus" became "Cer"); XCUITest's `typeText` was fine.
+- SwiftData + CloudKit: never add `@Attribute(.unique)` or a non-optional
+  relationship to `HoundProfile`, or the CloudKit store fails to open (the
+  app then silently falls back to a local store; see the log category
+  `ProfileStore`).
 
 ## Next steps
 
-1. **Start Phase 4 (names and images)** with a short plan. A SwiftData
-   model keyed by broker + hound index (a name, an SF Symbol or a photo),
-   because the index is all a hound tells us (Q1, Phase 7 may add a unique
-   ID). Rename and pick an icon from the card, show the name instead of
-   "Hound n", photos stored as external data. iCloud sync is unblocked now
-   (Q4): it needs the iCloud/CloudKit capability on the
-   `io.henryerinjones.HellHounds` App ID (automatic signing should add it)
-   and a CloudKit-compatible model (optional or defaulted properties, no
-   unique constraints). Decide with the user whether sync is in Phase 4 or
-   a follow-up. **Done when** a renamed device with a photo keeps both
-   after relaunch (covered by a test).
+1. **Finish Phase 4, step 5: check iCloud sync on real devices.** Run the
+   development build on the iPhone (and a second device or a Simulator
+   signed in to the same iCloud account) against a LAN broker
+   (`-mqttHost <Mac's LAN IP>`), never the public one. Rename a hound on
+   one and wait for it on the other. Then the user deploys the schema
+   (record type `CD_HoundProfile`) from Development to Production in
+   CloudKit Console (icloud.developer.apple.com) — TestFlight builds use
+   Production and won't sync until then. Bump the build number and upload
+   build 1.0 (2).
 2. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
 
 Manual testing: start Docker Desktop, then the local broker and sim as in
