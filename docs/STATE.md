@@ -16,8 +16,9 @@ discoverable, nameable and mockable. Requirements and founding decisions:
 **Phase 1 — Restructure + simulator: done (session 2).**
 **Phase 2 — MQTT layer + package review: done (session 3).**
 **Phase 3 — SwiftUI rewrite: done (session 4).**
-**Phase 4 — Names and images: done (session 6).** Sync in Production
-(TestFlight) not yet seen.
+**Phase 4 — Names and images: done (session 6).** Sync checked in
+Production: the user installed 1.0 (2) from TestFlight on two phones and a
+name and photo synced.
 **Phase 5 — README: not started (skipped for now).**
 **Phase 6 — TestFlight: done (session 5).** Taken ahead of Phases 4–5 once
 the user paid for the Apple Developer membership (Q4).
@@ -176,7 +177,8 @@ Plan (session 6; the user chose iCloud sync in this phase):
 4. ~~Tests~~ — done (session 6): a profile written to an on-disk store survives reopening it;
    duplicate resolution; a UI test renames a fake hound and relaunches.
 5. ~~Device check and schema deploy~~ — done (session 6): phone →
-   Simulator sync checked (below); the user deployed the schema
+   Simulator sync checked (below), and the user checked Simulator → phone and two TestFlight
+   installs of 1.0 (2) (name and photo synced); the user deployed the schema
    (`CD_HoundProfile`) to Production in CloudKit Console; build 1.0 (2)
    uploaded with the usual archive/export commands.
 
@@ -342,14 +344,9 @@ protocol.
 
 ## Next steps
 
-1. **Check build 1.0 (2) on TestFlight** (uploaded 2026-10-28 00:13;
-   Apple's processing not watched). Once processed, make sure it's in the
-   internal group "All", install it on two devices signed in to the same
-   iCloud account, and check that a rename syncs in Production. The IPA
-   went straight to App Store Connect (no local copy), so its distribution
-   entitlements (`aps-environment` = production, CloudKit environment
-   Production) weren't inspected. Optional: Simulator → phone sync on the
-   dev build.
+1. **Photo crop (user request, session 6):** the photo picker takes the
+   whole image; let the user zoom and move it inside the circle before
+   saving. Next phase to pick after that: 5 (README) or 7/8 when unblocked.
 2. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
 
 Manual testing: start Docker Desktop, then the local broker and sim as in
