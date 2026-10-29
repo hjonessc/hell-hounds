@@ -56,8 +56,8 @@ the user paid for the Apple Developer membership (Q4).
   user deployed the schema to Production, build 1.0 (2) was uploaded, and
   the user saw a name and photo sync between two TestFlight installs.
   **Phase 4 done.** Detail in the Phase 4 plan below.
-- **Session 7 (2026-10-29), tweaks the user asked for (not yet on
-  TestFlight):**
+- **Session 7 (2026-10-29), tweaks the user asked for; build 1.0 (3)
+  uploaded to TestFlight:**
   1. Long names: the card title shrinks to 75 %, then wraps to 2 lines;
      battery, "Offline" and the switch keep their size. "Yellow Hound"
      fits unshrunk.
@@ -82,6 +82,9 @@ the user paid for the Apple Developer membership (Q4).
   session (broker log), 35 s away disconnected at ~25 s and came back
   showing the last state, a hound removed meanwhile went Offline, and a
   fresh launch showed a named missing hound as "Not found".
+  Build 1.0 (3) archived and uploaded (the first export failed until the
+  user signed in to Xcode › Settings › Accounts again: "missing
+  Xcode-Username"). Apple's processing wasn't watched.
 
 ## Phased plan
 
@@ -314,6 +317,9 @@ protocol.
   characters ("Cerberus" became "Cer"); XCUITest's `typeText` was fine.
 - The drawn symbols (`hound.*`) show blank on build 1.0 (2) and older if
   synced from a newer build; get both testers onto 1.0 (3).
+- If an export fails with "Failed to Use Accounts" / "missing
+  Xcode-Username", the user has to sign in again in Xcode › Settings ›
+  Accounts.
 - The session 7 Simulator check left profiles for `localhost:1883` (a
   ghost "Yellow Hound", a jack-o'-lantern hound with a doubled long name,
   a bat on hound 3) in the Simulator's iCloud store; harmless, only seen
@@ -325,10 +331,9 @@ protocol.
 
 ## Next steps
 
-0. **TestFlight build 1.0 (3) with the session 7 tweaks** (no schema
-   change, so no CloudKit deploy): bump `CURRENT_PROJECT_VERSION` to 3,
-   archive and upload. Check on a phone: the grace period with a real
-   app switch, and a hound that's off showing "Not found".
+0. **Check build 1.0 (3) on a phone** (uploaded session 7): install from
+   TestFlight on both phones, then check the grace period with a real
+   app switch and a hound that's off showing "Not found".
 1. **Photo crop (user request, session 6; the user deferred it, so ask
    before starting).** Today `HoundEditSheet` keeps the whole photo and
    the card fills its circle from the centre. Proposed (about an hour):
@@ -357,7 +362,7 @@ xcodebuild test -project HellHounds.xcodeproj -scheme HellHounds -destination "p
 ```
 
 Uploading a TestFlight build (bump `CURRENT_PROJECT_VERSION` in both app
-configurations first; builds 1 and 2 are used; after any change to
+configurations first; builds 1–3 are used; after any change to
 `HoundProfile`, deploy the schema to Production in CloudKit Console first):
 
 ```bash
