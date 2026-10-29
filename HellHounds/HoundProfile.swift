@@ -10,6 +10,7 @@
 
 import Foundation
 import SwiftData
+import UIKit
 
 @Model
 final class HoundProfile {
@@ -39,6 +40,9 @@ final class HoundProfile {
         #Predicate { $0.broker == broker }
     }
 
+    /// Has a name, symbol or photo (a reset profile has none).
+    var isCustomised: Bool { name != nil || symbolName != nil || photoData != nil }
+
     /// The winning profile per hound index among `profiles`.
     static func newestByIndex(_ profiles: [HoundProfile]) -> [Int: HoundProfile] {
         var result: [Int: HoundProfile] = [:]
@@ -56,10 +60,15 @@ struct HoundLook: Equatable {
     var photoData: Data?
 
     static let symbols = [
-        "pawprint.fill", "dog.fill", "cat.fill", "hare.fill", "tortoise.fill", "bird.fill",
-        "lizard.fill", "fish.fill", "ladybug.fill", "ant.fill", "flame.fill", "bolt.fill",
-        "moon.stars.fill", "star.fill", "sparkles", "eye.fill",
+        "pawprint.fill", "hound.jackolantern", "hound.pumpkin", "hound.bat", "hound.ghost", "dog.fill",
+        "cat.fill", "hare.fill", "tortoise.fill", "bird.fill", "lizard.fill", "fish.fill",
+        "ladybug.fill", "ant.fill", "flame.fill", "bolt.fill", "moon.stars.fill", "moon.haze.fill",
+        "cloud.moon.bolt.fill", "cloud.fog.fill", "star.fill", "sparkles", "wand.and.stars", "eye.fill",
+        "eyes", "drop.fill", "theatermasks.fill", "leaf.fill", "hourglass",
     ]
+    /// Drawn for this app (Assets.xcassets, tools/symbols); SF Symbols has no
+    /// pumpkin, bat or ghost.
+    static let customSymbols: Set = ["hound.jackolantern", "hound.pumpkin", "hound.bat", "hound.ghost"]
     static let defaultSymbol = "pawprint.fill"
 
     init(name: String = "", symbolName: String? = nil, photoData: Data? = nil) {
@@ -77,7 +86,16 @@ struct HoundLook: Equatable {
         return trimmed.isEmpty ? "Hound \(houndIndex + 1)" : trimmed
     }
 
-    var symbol: String { symbolName ?? Self.defaultSymbol }
+    /// The symbol to show; a name this build doesn't know (synced from a
+    /// newer one) shows the default.
+    var symbol: String {
+        guard let symbolName, Self.isKnownSymbol(symbolName) else { return Self.defaultSymbol }
+        return symbolName
+    }
+
+    static func isKnownSymbol(_ name: String) -> Bool {
+        customSymbols.contains(name) || UIImage(systemName: name) != nil
+    }
 }
 
 extension ModelContext {

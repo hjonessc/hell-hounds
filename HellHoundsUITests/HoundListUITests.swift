@@ -84,6 +84,30 @@ final class HoundListUITests: XCTestCase {
     }
 
     @MainActor
+    func testANamedHoundThatIsntFoundStillShows() {
+        var app = launch(houndCount: 2)
+        let edit = app.buttons["hound-1-edit"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5), "the second hound never appeared")
+        edit.tap()
+        let name = app.textFields["edit-name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        name.tap()
+        name.typeText("Yellow Hound of the Baskervilles")
+        app.buttons["edit-save"].tap()
+        XCTAssertTrue(waitForLabel("Edit Yellow Hound of the Baskervilles", of: app.buttons["hound-1-edit"]))
+
+        // Only the first hound is around now.
+        app.terminate()
+        app = launch(houndCount: 1, resetProfiles: false)
+        XCTAssertTrue(app.switches["hound-0-toggle"].waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForLabel("Edit Yellow Hound of the Baskervilles", of: app.buttons["hound-1-edit"]))
+        let status = app.descendants(matching: .any)["hound-1-status"].firstMatch
+        XCTAssertTrue(waitForLabel("Not found", of: status, timeout: 10), "the missing hound isn't marked")
+        XCTAssertFalse(app.switches["hound-1-toggle"].exists, "a missing hound has no controls")
+        XCTAssertTrue(app.buttons["hound-1-edit"].isEnabled, "a missing hound can still be edited")
+    }
+
+    @MainActor
     func testSettingsCannotChangeTheBrokerOnTheFakeTransport() {
         let app = launch(houndCount: 2)
         app.tabBars.buttons["Settings"].tap()

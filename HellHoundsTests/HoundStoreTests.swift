@@ -232,4 +232,53 @@ struct HoundStoreTests {
         #expect(store.connectionState == .connected)
         #expect(fake.published.count == before)
     }
+
+    // MARK: - Suspending (the app in the background)
+
+    @Test func suspendKeepsEveryHoundsLastState() async throws {
+        try await connectAndWaitForAllHounds()
+        store.setOn(true, houndIndex: 0)
+        #expect(try await eventually { store.hounds[0].isOn })
+
+        store.suspend()
+        #expect(try await eventually { store.connectionState == .disconnected })
+        #expect(!fake.isConnected)
+        #expect(store.hounds.allSatisfy { $0.isConnected })
+        #expect(store.hounds[0].isOn)
+    }
+
+    @Test func aHoundThatDoesntAnswerAfterResumingGoesOffline() async throws {
+        // Its own fake: two stores on one transport would split its events.
+        let fake = FakeMQTTTransport()
+        let store = HoundStore(transport: fake, statusPollDelay: .zero, answerTimeout: .milliseconds(100))
+        store.connect()
+        try #require(try await eventually { store.hounds.count == 4 && !store.isDiscovering })
+        store.suspend()
+        try #require(try await eventually { store.connectionState == .disconnected })
+
+        fake.hounds[3] = nil  // switched off while the app was away
+        store.connect()
+        #expect(try await eventually { store.isDiscovering })
+        #expect(store.hounds[3].isConnected, "still the last state while waiting for answers")
+        #expect(try await eventually { !store.isDiscovering })
+        #expect(store.hounds.map(\.isConnected) == [true, true, true, false])
+    }
+
+    @Test func aDropAfterResumingMarksEveryHoundOffline() async throws {
+        try await connectAndWaitForAllHounds()
+        store.suspend()
+        try #require(try await eventually { store.connectionState == .disconnected })
+
+        store.connect()
+        try #require(try await eventually { store.connectionState == .connected })
+        fake.dropConnection()
+        #expect(try await eventually { store.hounds.allSatisfy { !$0.isConnected } })
+    }
+
+    @Test func suspendWhileDisconnectedDoesntSpareTheNextDrop() async throws {
+        store.suspend()
+        try await connectAndWaitForAllHounds()
+        fake.dropConnection()
+        #expect(try await eventually { store.hounds.allSatisfy { !$0.isConnected } })
+    }
 }

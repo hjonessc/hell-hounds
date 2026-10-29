@@ -48,7 +48,7 @@ struct HoundEditSheet: View {
                             Button {
                                 look.symbolName = symbol == HoundLook.defaultSymbol ? nil : symbol
                             } label: {
-                                Image(systemName: symbol)
+                                Image(houndSymbol: symbol)
                                     .font(.title3)
                                     .frame(width: 44, height: 44)
                                     .foregroundStyle(isSelected ? .white : .orange)
@@ -130,11 +130,22 @@ struct HoundAvatar: View {
                 .overlay { Circle().strokeBorder(isOn ? Color.orange : Color.secondary, lineWidth: 2) }
                 .accessibilityHidden(true)
         } else {
-            Image(systemName: systemImage)
+            Image(houndSymbol: systemImage)
                 .font(size > 40 ? .largeTitle : .body)
                 .foregroundStyle(isOn ? .orange : .secondary)
                 .frame(width: size, height: size)
                 .accessibilityHidden(true)
+        }
+    }
+}
+
+extension Image {
+    /// An SF Symbol, or one of the app's own (`HoundLook.customSymbols`).
+    init(houndSymbol name: String) {
+        if HoundLook.customSymbols.contains(name) {
+            self.init(name)
+        } else {
+            self.init(systemName: name)
         }
     }
 }

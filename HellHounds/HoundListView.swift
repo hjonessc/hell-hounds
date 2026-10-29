@@ -4,7 +4,8 @@
 //
 //  The hound list: a connection banner, a master card that drives every
 //  hound, and one card per discovered hound with the name and look the
-//  user gave it.
+//  user gave it. Hounds the user named that haven't reported get a small
+//  card saying so.
 //
 
 import SwiftData
@@ -29,7 +30,11 @@ struct HoundListView: View {
             ScrollView {
                 LazyVStack(spacing: 12) {
                     ConnectionBanner(state: store.connectionState, connect: { store.connect() })
-                    if store.hounds.isEmpty {
+                    let looks = HoundProfile.newestByIndex(profiles)
+                    let found = Dictionary(uniqueKeysWithValues: store.hounds.map { ($0.index, $0) })
+                    let saved = looks.filter { $0.value.isCustomised }.keys
+                    let indices = Set(found.keys).union(saved).sorted()
+                    if indices.isEmpty {
                         if store.connectionState == .connected {
                             ContentUnavailableView(
                                 "No Hounds Yet",
@@ -38,26 +43,29 @@ struct HoundListView: View {
                             )
                         }
                     } else {
-                        HoundCard(
-                            title: "All Hounds",
-                            systemImage: "flame.fill",
-                            hound: store.master,
-                            accessibilityPrefix: "hound-master",
-                            setOn: { store.setAllOn($0) },
-                            setBrightness: { store.setAllBrightness($0) }
-                        )
-                        let looks = HoundProfile.newestByIndex(profiles)
-                        ForEach(store.hounds) { hound in
-                            let look = HoundLook(looks[hound.index])
+                        if !found.isEmpty {
                             HoundCard(
-                                title: look.title(houndIndex: hound.index),
+                                title: "All Hounds",
+                                systemImage: "flame.fill",
+                                hound: store.master,
+                                accessibilityPrefix: "hound-master",
+                                setOn: { store.setAllOn($0) },
+                                setBrightness: { store.setAllBrightness($0) }
+                            )
+                        }
+                        ForEach(indices, id: \.self) { index in
+                            let look = HoundLook(looks[index])
+                            HoundCard(
+                                title: look.title(houndIndex: index),
                                 systemImage: look.symbol,
                                 photoData: look.photoData,
-                                hound: hound,
-                                accessibilityPrefix: "hound-\(hound.index)",
-                                setOn: { store.setOn($0, houndIndex: hound.index) },
-                                setBrightness: { store.setBrightness($0, houndIndex: hound.index) },
-                                edit: { editTarget = EditTarget(index: hound.index, look: look) }
+                                hound: found[index] ?? Hound(index: index),
+                                notFound: found[index] != nil ? nil
+                                    : store.isDiscovering || store.connectionState == .connecting ? "Looking…" : "Not found",
+                                accessibilityPrefix: "hound-\(index)",
+                                setOn: { store.setOn($0, houndIndex: index) },
+                                setBrightness: { store.setBrightness($0, houndIndex: index) },
+                                edit: { editTarget = EditTarget(index: index, look: look) }
                             )
                         }
                     }
@@ -65,6 +73,7 @@ struct HoundListView: View {
                 .padding(.horizontal)
                 .padding(.bottom)
                 .animation(.default, value: store.hounds.map(\.index))
+                .animation(.default, value: profiles.count)
                 .animation(.default, value: store.connectionState)
             }
             .background(Color(.systemGroupedBackground))
@@ -91,6 +100,9 @@ private struct HoundCard: View {
     let systemImage: String
     var photoData: Data?
     let hound: Hound
+    /// Set for a hound the user named that hasn't reported: says so in place
+    /// of the battery, and the card has no controls.
+    var notFound: String?
     let accessibilityPrefix: String
     let setOn: @MainActor (Bool) -> Void
     let setBrightness: @MainActor (Int) -> Void
@@ -105,9 +117,13 @@ private struct HoundCard: View {
     private var label: some View {
         HStack(spacing: 10) {
             HoundAvatar(systemImage: systemImage, photoData: photoData, isOn: hound.isOn)
+            // Long names shrink a little, then wrap to a second line.
             Text(title)
                 .font(.headline)
-                .lineLimit(1)
+                .lineLimit(2)
+                .minimumScaleFactor(0.75)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .contentShape(.rect)
     }
@@ -115,46 +131,45 @@ private struct HoundCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
-                if let edit {
-                    Button(action: edit) { label }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Edit \(title)")
-                        .accessibilityIdentifier("\(accessibilityPrefix)-edit")
-                } else {
-                    label
-                }
-                Spacer()
-                if hound.isConnected {
-                    BatteryIndicator(level: hound.battery)
-                } else {
-                    Text("Offline")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                Toggle(title, isOn: Binding(get: { hound.isOn }, set: setOn))
-                    .labelsHidden()
-                    .accessibilityIdentifier("\(accessibilityPrefix)-toggle")
-            }
-            HStack(spacing: 10) {
-                Image(systemName: "sun.min")
-                    .foregroundStyle(.secondary)
-                    .frame(width: 24)
-                Slider(
-                    value: Binding(get: { brightness }, set: { draftBrightness = $0 }),
-                    in: 0...100
-                ) { isEditing in
-                    // Send on release, like the old UISlider with isContinuous = false.
-                    if !isEditing, let draftBrightness {
-                        setBrightness(Int(draftBrightness.rounded()))
+                Group {
+                    if let edit {
+                        Button(action: edit) { label }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Edit \(title)")
+                            .accessibilityIdentifier("\(accessibilityPrefix)-edit")
+                    } else {
+                        label
                     }
                 }
-                .accessibilityLabel("\(title) brightness")
-                .accessibilityIdentifier("\(accessibilityPrefix)-slider")
-                Text("\(Int(brightness.rounded()))%")
-                    .font(.subheadline)
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .frame(width: 44, alignment: .trailing)
+                .layoutPriority(1)  // the name gets the room before the spacer
+                Spacer(minLength: 0)
+                // The name wraps first; what's on its right keeps its size.
+                if let notFound {
+                    Label(notFound, systemImage: "questionmark.circle")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .fixedSize()
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(notFound)
+                        .accessibilityIdentifier("\(accessibilityPrefix)-status")
+                } else {
+                    if hound.isConnected {
+                        BatteryIndicator(level: hound.battery)
+                            .fixedSize()
+                    } else {
+                        Text("Offline")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .fixedSize()
+                    }
+                    Toggle(title, isOn: Binding(get: { hound.isOn }, set: setOn))
+                        .labelsHidden()
+                        .disabled(!hound.isConnected)
+                        .accessibilityIdentifier("\(accessibilityPrefix)-toggle")
+                }
+            }
+            if notFound == nil {
+                brightnessRow
             }
         }
         .tint(.orange)
@@ -163,10 +178,34 @@ private struct HoundCard: View {
         .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
         .environment(\.colorScheme, .dark)
         .opacity(hound.isConnected ? 1 : 0.45)
-        .disabled(!hound.isConnected)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(accessibilityPrefix)
         .onChange(of: hound.brightness) { draftBrightness = nil }
+    }
+
+    private var brightnessRow: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "sun.min")
+                .foregroundStyle(.secondary)
+                .frame(width: 24)
+            Slider(
+                value: Binding(get: { brightness }, set: { draftBrightness = $0 }),
+                in: 0...100
+            ) { isEditing in
+                // Send on release, like the old UISlider with isContinuous = false.
+                if !isEditing, let draftBrightness {
+                    setBrightness(Int(draftBrightness.rounded()))
+                }
+            }
+            .accessibilityLabel("\(title) brightness")
+            .accessibilityIdentifier("\(accessibilityPrefix)-slider")
+            Text("\(Int(brightness.rounded()))%")
+                .font(.subheadline)
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+                .frame(width: 44, alignment: .trailing)
+        }
+        .disabled(!hound.isConnected)
     }
 }
 

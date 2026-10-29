@@ -26,11 +26,12 @@ struct HellHoundsApp: App {
             .tabBarMinimizeBehavior(.onScrollDown)
             .modelContainer(profiles)
         }
-        // Stay connected only while in the foreground; the transport reconnects on its own in between.
+        // Stay connected in the foreground and briefly after leaving it; the
+        // transport reconnects on its own in between.
         .onChange(of: scenePhase, initial: true) { _, phase in
             switch phase {
-            case .active: model.store.connect()
-            case .background: model.store.disconnect()
+            case .active: model.enterForeground()
+            case .background: model.enterBackground()
             default: break
             }
         }
