@@ -107,7 +107,8 @@ TestFlight and checked on the phones. No phase is in progress.
      last `status-json`.
   Fake transport and `hound-sim` now send `BatStats` too. 69 unit + 5 UI
   tests. Build 1.0 (4) uploaded to TestFlight on 2026-10-31 (Apple's
-  processing not watched); not yet checked on a real hound.
+  processing not watched). On 2026-10-31 the user installed 1.0 (4) and
+  checked everything on the phone with a real hound.
 
 ## Phased plan
 
