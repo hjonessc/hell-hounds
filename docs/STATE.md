@@ -1,6 +1,6 @@
 # Project state
 
-_Last updated: 2026-10-29 (session 7)_
+_Last updated: 2026-10-30 (session 7)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
@@ -22,6 +22,9 @@ name and photo synced.
 **Phase 5 — README: not started (skipped for now).**
 **Phase 6 — TestFlight: done (session 5).** Taken ahead of Phases 4–5 once
 the user paid for the Apple Developer membership (Q4).
+**Session 7 tweaks (between phases): done.** Long names, Halloween
+symbols, unfound saved hounds, background grace period; build 1.0 (3) on
+TestFlight and checked on the phones. No phase is in progress.
 
 ## Done
 
@@ -36,17 +39,9 @@ the user paid for the Apple Developer membership (Q4).
   banner, Settings tab with broker switching (`AppModel`), Liquid Glass tab
   bar, UI test target, check against `hound-sim -n 5` — see tag `m3` and
   git history for detail.
-- **Session 5 (2026-10-27/28), Phase 6:** the user paid for the Apple
-  Developer membership, so TestFlight was taken ahead of Phases 4–5. New
-  bundle ID `io.henryerinjones.HellHounds`; `PrivacyInfo.xcprivacy`
-  (UserDefaults, CA92.1), `ITSAppUsesNonExemptEncryption = NO`, a
-  local-network usage string; icon PNGs without an alpha channel. First run
-  on the user's iPhone 14 Pro on the fake transport (checked by screenshot
-  and OCR). The user registered the explicit App ID and created the App
-  Store Connect record; build 1.0 (1) archived and uploaded with
-  `tools/testflight/ExportOptions.plist`; the user and one friend
-  (internal testers) both installed it from TestFlight. **Phase 6 done.**
-  Detail in the Phase 6 plan below.
+- **Session 5 (2026-10-27/28), Phase 6:** bundle ID, privacy manifest,
+  first device run, App Store Connect record, build 1.0 (1) on TestFlight
+  for the user and one friend — see tag `m6` and the Phase 6 plan below.
 - **Session 6 (2026-10-27/28), Phase 4:** the user chose iCloud sync in
   this phase. `HoundProfile` (SwiftData, CloudKit-compatible, keyed by
   broker + index), edit sheet from each card (name, 16 symbols, photo
@@ -56,8 +51,8 @@ the user paid for the Apple Developer membership (Q4).
   user deployed the schema to Production, build 1.0 (2) was uploaded, and
   the user saw a name and photo sync between two TestFlight installs.
   **Phase 4 done.** Detail in the Phase 4 plan below.
-- **Session 7 (2026-10-29), tweaks the user asked for; build 1.0 (3)
-  uploaded to TestFlight:**
+- **Session 7 (2026-10-29/30), tweaks the user asked for; build 1.0 (3)
+  on TestFlight:**
   1. Long names: the card title shrinks to 75 %, then wraps to 2 lines;
      battery, "Offline" and the switch keep their size. "Yellow Hound"
      fits unshrunk.
@@ -84,7 +79,9 @@ the user paid for the Apple Developer membership (Q4).
   fresh launch showed a named missing hound as "Not found".
   Build 1.0 (3) archived and uploaded (the first export failed until the
   user signed in to Xcode › Settings › Accounts again: "missing
-  Xcode-Username"). Apple's processing wasn't watched.
+  Xcode-Username"). On 2026-10-30 the user installed 1.0 (3) and checked
+  on the phones: a quick app switch didn't reconnect, and a hound that was
+  off showed "Not found".
 
 ## Phased plan
 
@@ -316,7 +313,9 @@ protocol.
 - Simulator tool: typing into a text field right after tapping it can drop
   characters ("Cerberus" became "Cer"); XCUITest's `typeText` was fine.
 - The drawn symbols (`hound.*`) show blank on build 1.0 (2) and older if
-  synced from a newer build; get both testers onto 1.0 (3).
+  synced from a newer build; testers need 1.0 (3) or later. Adding a drawn
+  symbol later has the same catch for older builds (they fall back only
+  from 1.0 (3) on, to the paw print).
 - If an export fails with "Failed to Use Accounts" / "missing
   Xcode-Username", the user has to sign in again in Xcode › Settings ›
   Accounts.
@@ -331,9 +330,6 @@ protocol.
 
 ## Next steps
 
-0. **Check build 1.0 (3) on a phone** (uploaded session 7): install from
-   TestFlight on both phones, then check the grace period with a real
-   app switch and a hound that's off showing "Not found".
 1. **Photo crop (user request, session 6; the user deferred it, so ask
    before starting).** Today `HoundEditSheet` keeps the whole photo and
    the card fills its circle from the centre. Proposed (about an hour):
