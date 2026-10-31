@@ -106,7 +106,8 @@ TestFlight and checked on the phones. No phase is in progress.
      app now reads `BatStats`), messages sent/received, topic and the raw
      last `status-json`.
   Fake transport and `hound-sim` now send `BatStats` too. 69 unit + 5 UI
-  tests. Not yet on TestFlight; not checked on a real hound.
+  tests. Build 1.0 (4) uploaded to TestFlight on 2026-10-31 (Apple's
+  processing not watched); not yet checked on a real hound.
 
 ## Phased plan
 
@@ -383,7 +384,7 @@ xcodebuild test -project HellHounds.xcodeproj -scheme HellHounds -destination "p
 ```
 
 Uploading a TestFlight build (bump `CURRENT_PROJECT_VERSION` in both app
-configurations first; builds 1–3 are used; after any change to
+configurations first; builds 1–4 are used; after any change to
 `HoundProfile`, deploy the schema to Production in CloudKit Console first):
 
 ```bash
@@ -392,8 +393,9 @@ xcodebuild -exportArchive -archivePath build/HellHounds.xcarchive -exportOptions
 ```
 
 Notes for later phases:
-- Real hounds also publish `status` and `BatStats` (voltage and current);
-  the Phase 3 battery indicator could use them (PROTOCOL.md).
+- Real hounds also publish `status` (unused). `BatStats` voltage and
+  current now show in debug mode; the card's battery indicator still uses
+  `status-json`.
 - The project was generated once with XcodeGen and is now edited in Xcode
   (session 3 added the test target and shared scheme by editing the project
   file directly); there's no `project.yml` to keep in sync.
