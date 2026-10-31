@@ -24,7 +24,10 @@ name and photo synced.
 the user paid for the Apple Developer membership (Q4).
 **Session 7 tweaks (between phases): done.** Long names, Halloween
 symbols, unfound saved hounds, background grace period; build 1.0 (3) on
-TestFlight and checked on the phones. No phase is in progress.
+TestFlight and checked on the phones.
+**Session 8 troubleshooting features (between phases): done.** Connection
+times, help screen, pull to refresh, event log, identify, debug mode; build
+1.0 (4) on TestFlight and checked on the phone. No phase is in progress.
 
 ## Done
 
@@ -42,15 +45,10 @@ TestFlight and checked on the phones. No phase is in progress.
 - **Session 5 (2026-10-27/28), Phase 6:** bundle ID, privacy manifest,
   first device run, App Store Connect record, build 1.0 (1) on TestFlight
   for the user and one friend — see tag `m6` and the Phase 6 plan below.
-- **Session 6 (2026-10-27/28), Phase 4:** the user chose iCloud sync in
-  this phase. `HoundProfile` (SwiftData, CloudKit-compatible, keyed by
-  broker + index), edit sheet from each card (name, 16 symbols, photo
-  downscaled to 512 px), CloudKit + push entitlements, `HellHounds/Info.plist`
-  for the remote-notification background mode. 46 unit + 3 UI tests.
-  Sync checked phone ↔ Simulator on local Mosquitto over the LAN, then the
-  user deployed the schema to Production, build 1.0 (2) was uploaded, and
-  the user saw a name and photo sync between two TestFlight installs.
-  **Phase 4 done.** Detail in the Phase 4 plan below.
+- **Session 6 (2026-10-27/28), Phase 4:** names, symbols and photos per
+  hound (`HoundProfile`, SwiftData + CloudKit sync), build 1.0 (2), sync
+  checked between two TestFlight installs — see tag `m4` and the Phase 4
+  plan below.
 - **Session 7 (2026-10-29/30), tweaks the user asked for; build 1.0 (3)
   on TestFlight:**
   1. Long names: the card title shrinks to 75 %, then wraps to 2 lines;
@@ -343,6 +341,12 @@ protocol.
   synced from a newer build; testers need 1.0 (3) or later. Adding a drawn
   symbol later has the same catch for older builds (they fall back only
   from 1.0 (3) on, to the paw print).
+- UI tests and Simulator runs share the Simulator's event log file, so
+  its log has entries from test runs (harmless). UI tests launch with
+  `-debugMode NO` unless they ask for it; a `-debugMode` launch argument
+  overrides the Settings toggle for that run.
+- Simulator tool, iPhone 17 Pro: the Settings tab is at about (243, 814)
+  pt; (260, 840) misses it.
 - If an export fails with "Failed to Use Accounts" / "missing
   Xcode-Username", the user has to sign in again in Xcode › Settings ›
   Accounts.
@@ -357,7 +361,16 @@ protocol.
 
 ## Next steps
 
-1. **Photo crop (user request, session 6; the user deferred it, so ask
+1. **Unique hardware ID (user request, session 8; waits on Q1, the
+   firmware code).** Proposed: the firmware uses `WiFi.macAddress()` (or
+   `ESP.getChipId()`) in the topic instead of a hard-coded index, and
+   publishes `status-json` at boot, retained. App side: accept
+   non-numeric IDs in `HoundProtocol.index(fromTopic:leaf:)`, rely on the
+   `+/status-json` wildcard instead of the 0–7 probe, migrate
+   `HoundProfile`s keyed by index (schema deploy), show the ID in debug
+   mode, update PROTOCOL.md. The user may add the firmware to the repo;
+   the agent offered to draft the firmware side.
+2. **Photo crop (user request, session 6; the user deferred it, so ask
    before starting).** Today `HoundEditSheet` keeps the whole photo and
    the card fills its circle from the centre. Proposed (about an hour):
    after picking, a crop screen with the photo behind a circle outline,
@@ -368,9 +381,9 @@ protocol.
    user: re-cropping means re-picking the photo; keeping the original plus
    zoom/offset would allow re-editing but syncs larger photos and needs a
    schema change and deploy.
-2. Then pick the next phase: 5 (README with screenshots from UI tests) is
+3. Then pick the next phase: 5 (README with screenshots from UI tests) is
    unblocked; 7 waits on Q1/Q3, 8 on Q5.
-3. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
+4. Move MQTTNIO from `3.0.0-rc.1` to `3.0.0` once it's tagged (separate commit).
 
 Manual testing: start Docker Desktop, then the local broker and sim as in
 `tools/hound-sim/README.md`, and launch with `-mqttHost localhost`. Never on
