@@ -100,6 +100,7 @@ final class MQTTNIOTransport: MQTTTransport {
                 }
             } catch {
                 print("MQTT connection failed: \(error)")
+                continuation.yield(.failed("Connection failed: \(error)"))
             }
             continuation.yield(.stateChanged(.disconnected))
             guard !Task.isCancelled else { return }
@@ -143,6 +144,7 @@ final class MQTTNIOTransport: MQTTTransport {
                         try await connection.publish(to: topic, payload: ByteBuffer(string: payload), qos: .atMostOnce)
                     } catch {
                         print("MQTT publish to \(topic) failed: \(error)")
+                        events.yield(.failed("Sending to \(topic) failed: \(error)"))
                     }
                 case .subscribe(let topicFilter):
                     group.addTask {
@@ -154,6 +156,7 @@ final class MQTTNIOTransport: MQTTTransport {
                             }
                         } catch {
                             print("MQTT subscription to \(topicFilter) ended: \(error)")
+                            events.yield(.failed("Listening on \(topicFilter) stopped: \(error)"))
                         }
                     }
                 }

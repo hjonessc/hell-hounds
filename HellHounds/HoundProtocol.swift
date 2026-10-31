@@ -15,6 +15,8 @@ enum HoundProtocol {
         case setLevel = "set-level"
         case getStatus = "msg"
         case statusJSON = "status-json"
+        /// Hound → app, text: charge, voltage, current (seen from a real hound).
+        case batStats = "BatStats"
     }
 
     static func topic(_ leaf: Leaf, index: Int) -> String {
@@ -39,13 +41,18 @@ enum HoundProtocol {
     static let getStatusPayload = "0"
 
     /// The device index in `<prefix>/<index>/status-json`, or nil for any other topic.
+    static func statusIndex(fromTopic topic: String) -> Int? {
+        index(fromTopic: topic, leaf: .statusJSON)
+    }
+
+    /// The device index in `<prefix>/<index>/<leaf>`, or nil for any other topic.
     /// The index must be plain digits: anyone on the broker can publish here,
     /// and `Int("+1")` or `Int("-1")` would otherwise parse.
-    static func statusIndex(fromTopic topic: String) -> Int? {
+    static func index(fromTopic topic: String, leaf: Leaf) -> Int? {
         let parts = topic.split(separator: "/", omittingEmptySubsequences: false)
         guard parts.count == 3,
               parts[0] == topicPrefix,
-              parts[2] == Leaf.statusJSON.rawValue,
+              parts[2] == leaf.rawValue,
               !parts[1].isEmpty,
               parts[1].allSatisfy({ ("0"..."9").contains($0) })
         else { return nil }
@@ -97,5 +104,30 @@ struct HoundStatus: Equatable {
         self.isOn = isOn
         self.brightness = brightness
         self.battery = battery
+    }
+}
+
+/// A decoded `BatStats` payload, such as ` SOC: 90 %\n4.00 V | -79 mA\nTime: 155.45`.
+/// Each value is nil when its part is missing; nil overall if none is there.
+struct BatteryStats: Equatable {
+    var charge: Int?
+    var voltage: Double?
+    /// Negative while discharging.
+    var milliamps: Int?
+
+    init?(payload: String) {
+        func match(_ pattern: Regex<(Substring, Substring)>) -> Substring? {
+            payload.firstMatch(of: pattern)?.output.1
+        }
+        charge = match(/SOC:\s*(\d+)\s*%/).flatMap { Int($0) }
+        voltage = match(/(\d+(?:\.\d+)?)\s*V\b/).flatMap { Double($0) }
+        milliamps = match(/(-?\d+)\s*mA/).flatMap { Int($0) }
+        if charge == nil && voltage == nil && milliamps == nil { return nil }
+    }
+
+    init(charge: Int?, voltage: Double?, milliamps: Int?) {
+        self.charge = charge
+        self.voltage = voltage
+        self.milliamps = milliamps
     }
 }

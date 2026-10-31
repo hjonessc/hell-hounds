@@ -22,6 +22,8 @@ enum MQTTConnectionState: Equatable, Sendable {
 enum MQTTTransportEvent: Equatable, Sendable {
     case stateChanged(MQTTConnectionState)
     case message(MQTTMessage)
+    /// Something went wrong (for the event log); state changes still follow.
+    case failed(String)
 }
 
 @MainActor

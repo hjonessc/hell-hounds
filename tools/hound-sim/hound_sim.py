@@ -6,7 +6,7 @@
 """Simulate N Hell Hounds on an MQTT broker.
 
 Implements the device side of docs/PROTOCOL.md: answers `msg` polls with
-`status-json`, obeys `set-state` and `set-level`, and prints every state
+`status-json` (and `BatStats`, as the real hound does), obeys `set-state` and `set-level`, and prints every state
 change. Run `uv run hound_sim.py --help` for options.
 """
 
@@ -149,6 +149,11 @@ class Simulator:
         if self.args.escaped:
             payload = payload.replace('"', '\\"')
         self.client.publish(self.topic(hound.index, "status-json"), payload, qos=0)
+        # The real firmware follows with a text battery report (PROTOCOL.md).
+        volts = 3.3 + 0.9 * hound.battery / 100
+        milliamps = -(20 + 3 * hound.level) if hound.on else -79
+        stats = f" SOC: {round(hound.battery)} %\n{volts:.2f} V | {milliamps} mA\nTime: 155.45"
+        self.client.publish(self.topic(hound.index, "BatStats"), stats, qos=0)
 
     def drain(self, minutes: float) -> None:
         """Lower each lit hound's battery; push status when the percent changes."""

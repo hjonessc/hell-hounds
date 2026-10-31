@@ -2,16 +2,23 @@
 //  SettingsView.swift
 //  HellHounds
 //
-//  Broker host and port, plus what the app is connected to.
+//  Broker host and port, what the app is connected to, help, the event
+//  log and debug mode.
 //
 
 import SwiftUI
+
+/// Debug mode shows extra details on each hound's card.
+enum DebugMode {
+    static let key = "debugMode"
+}
 
 struct SettingsView: View {
     let model: AppModel
 
     @State private var host = ""
     @State private var port = ""
+    @AppStorage(DebugMode.key) private var debugMode = false
 
     private var draft: BrokerAddress? { BrokerAddress(host: host, portText: port) }
 
@@ -51,7 +58,35 @@ struct SettingsView: View {
                 Section("Connection") {
                     LabeledContent("Broker", value: "\(model.broker.host):\(model.broker.port)")
                     LabeledContent("Status", value: statusText)
+                    if let connectedAt = model.store.connectedAt {
+                        LabeledContent(model.store.connectionState == .connected ? "Connected Since" : "Last Connected") {
+                            TimelineView(.periodic(from: .now, by: 1)) { context in
+                                Text(connectedAt.timeAndAge(now: context.date))
+                            }
+                        }
+                        .accessibilityIdentifier("settings-connected-at")
+                    }
+                    if model.store.connectionState != .connected, let disconnectedAt = model.store.disconnectedAt {
+                        LabeledContent("Disconnected") {
+                            TimelineView(.periodic(from: .now, by: 1)) { context in
+                                Text(disconnectedAt.timeAndAge(now: context.date))
+                            }
+                        }
+                    }
                     LabeledContent("Hounds Found", value: "\(model.store.hounds.count)")
+                }
+
+                Section {
+                    NavigationLink("How It Works & Troubleshooting") { HelpView() }
+                        .accessibilityIdentifier("settings-help")
+                    NavigationLink("Event Log") { EventLogView(log: model.log, profileBroker: model.profileBrokerKey) }
+                        .accessibilityIdentifier("settings-event-log")
+                    Toggle("Debug Mode", isOn: $debugMode)
+                        .accessibilityIdentifier("settings-debug-mode")
+                } header: {
+                    Text("Help")
+                } footer: {
+                    Text("Debug mode adds details to each hound's card: when it was last heard, battery voltage, message counts and its MQTT topic.")
                 }
 
                 Section("About") {

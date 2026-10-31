@@ -17,6 +17,7 @@ import UIKit
 final class AppModel {
     private(set) var broker: BrokerAddress
     private(set) var store: HoundStore
+    let log: EventLog
     /// The broker comes from `-mqttHost` (or the fake transport is on), so
     /// Settings can't change it. Keeps test runs off the public broker.
     let isBrokerLocked: Bool
@@ -39,8 +40,10 @@ final class AppModel {
         usesFakeTransport: Bool = TransportFactory.usesFakeTransport,
         makeTransport: @escaping @MainActor (BrokerAddress) -> any MQTTTransport = TransportFactory.makeTransport(broker:),
         backgroundGrace: Duration = .seconds(25),
-        beginBackgroundTime: @escaping BeginBackgroundTime = AppModel.beginApplicationBackgroundTask
+        beginBackgroundTime: @escaping BeginBackgroundTime = AppModel.beginApplicationBackgroundTask,
+        log: EventLog = EventLog(fileURL: EventLog.defaultFileURL)
     ) {
+        self.log = log
         self.defaults = defaults
         self.makeTransport = makeTransport
         self.backgroundGrace = backgroundGrace
@@ -50,7 +53,8 @@ final class AppModel {
         isBrokerLocked = usesFakeTransport || launchBroker != nil
         let broker = launchBroker ?? BrokerAddress.stored(in: defaults) ?? .publicBroker
         self.broker = broker
-        store = HoundStore(transport: makeTransport(broker))
+        store = HoundStore(transport: makeTransport(broker), log: log)
+        log.add(.app, "App started (\(usesFakeTransport ? "fake hounds" : "broker \(broker.host):\(broker.port)"))")
     }
 
     /// Which hound profiles (names and looks) belong to this broker.
@@ -63,8 +67,9 @@ final class AppModel {
         guard !isBrokerLocked, newBroker != broker else { return }
         newBroker.store(in: defaults)
         broker = newBroker
+        log.add(.app, "Switched to broker \(newBroker.host):\(newBroker.port)")
         store.disconnect()
-        store = HoundStore(transport: makeTransport(newBroker))
+        store = HoundStore(transport: makeTransport(newBroker), log: log)
         store.connect()
     }
 
@@ -74,6 +79,7 @@ final class AppModel {
     /// suspends the store, which keeps showing the hounds as they were.
     func enterBackground() {
         guard graceTask == nil else { return }
+        log.add(.app, "App in the background")
         endBackgroundTime = beginBackgroundTime { [weak self] in self?.endGrace(suspending: true) }
         graceTask = Task { [weak self, backgroundGrace] in
             do {
@@ -87,6 +93,9 @@ final class AppModel {
 
     /// Connects, unless the connection outlived the time in the background.
     func enterForeground() {
+        if graceTask != nil || store.connectionState == .disconnected {
+            log.add(.app, "App in the foreground")
+        }
         endGrace(suspending: false)
         store.connect()
     }

@@ -4,7 +4,8 @@
 //
 //  An in-process broker plus hounds, for unit tests, UI tests and screenshots
 //  (ADR 0001). Speaks docs/PROTOCOL.md the way the real firmware does: plain
-//  JSON with a boolean `ledState`, sent after a poll and after every command.
+//  JSON with a boolean `ledState`, sent after a poll and after every command,
+//  followed by a `BatStats` text message.
 //
 
 import Foundation
@@ -93,19 +94,25 @@ final class FakeMQTTTransport: MQTTTransport {
         case .setLevel:
             if let level = Int(payload) { hounds[index]?.level = level }
             if reportsStatusAfterCommands { sendStatus(index: index) }
-        case .statusJSON:
+        case .statusJSON, .batStats:
             break
         }
     }
 
     // MARK: - Test controls
 
-    /// Publishes hound `index`'s status, as the device would.
+    /// Publishes hound `index`'s status and battery stats, as the device would.
     func sendStatus(index: Int) {
         guard let hound = hounds[index] else { return }
         deliver(MQTTMessage(
             topic: HoundProtocol.topic(.statusJSON, index: index),
             payload: #"{"ledState":\#(hound.isOn),"ledLvl":\#(hound.level),"battery":\#(hound.battery)}"#
+        ))
+        let volts = 3.3 + 0.9 * Double(hound.battery) / 100
+        let milliamps = hound.isOn ? -(20 + 3 * hound.level) : -79
+        deliver(MQTTMessage(
+            topic: HoundProtocol.topic(.batStats, index: index),
+            payload: " SOC: \(hound.battery) %\n\(volts.formatted(.number.precision(.fractionLength(2)))) V | \(milliamps) mA\nTime: 155.45"
         ))
     }
 

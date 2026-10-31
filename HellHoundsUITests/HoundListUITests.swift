@@ -14,11 +14,14 @@ final class HoundListUITests: XCTestCase {
 
     /// Always the in-process fake: UI tests must never reach a broker
     /// (real hounds are live on the public one). Profiles start empty
-    /// unless `resetProfiles` is false (a relaunch).
+    /// unless `resetProfiles` is false (a relaunch). Debug mode is off
+    /// unless asked for, whatever it was left at.
     @MainActor
-    private func launch(houndCount: Int, resetProfiles: Bool = true) -> XCUIApplication {
+    private func launch(houndCount: Int, resetProfiles: Bool = true, debugMode: Bool = false) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-useFakeTransport", "YES", "-fakeHoundCount", String(houndCount)]
+        app.launchArguments = [
+            "-useFakeTransport", "YES", "-fakeHoundCount", String(houndCount), "-debugMode", debugMode ? "YES" : "NO",
+        ]
         if resetProfiles {
             app.launchArguments += ["-resetProfiles", "YES"]
         }
@@ -117,5 +120,35 @@ final class HoundListUITests: XCTestCase {
         XCTAssertFalse(host.isEnabled)
         XCTAssertFalse(app.buttons["settings-connect"].isEnabled)
         XCTAssertFalse(app.buttons["Use the Public Broker"].exists)
+    }
+
+    @MainActor
+    func testIdentifyFromDebugModeAndLongPressShowsInTheLog() {
+        let app = launch(houndCount: 2, debugMode: true)
+        let debug = app.descendants(matching: .any)["hound-0-debug"].firstMatch
+        XCTAssertTrue(debug.waitForExistence(timeout: 5), "debug mode shows no details")
+        XCTAssertTrue(debug.label.contains("HellHounds-MQTT/0/"), "no topic in \(debug.label)")
+
+        app.buttons["hound-0-identify"].tap()
+        let stop = app.buttons["hound-0-stop-identify"]
+        XCTAssertTrue(stop.waitForExistence(timeout: 5), "identify didn't start")
+        stop.tap()
+        XCTAssertTrue(app.buttons["hound-0-identify"].waitForExistence(timeout: 5), "identify didn't stop")
+
+        app.descendants(matching: .any)["hound-1"].firstMatch.press(forDuration: 1.2)
+        let menuItem = app.buttons["Identify (Blink 30 s)"]
+        XCTAssertTrue(menuItem.waitForExistence(timeout: 5), "no Identify in the long-press menu")
+        menuItem.tap()
+        XCTAssertTrue(app.buttons["hound-1-stop-identify"].waitForExistence(timeout: 5))
+        app.buttons["hound-1-stop-identify"].tap()
+
+        app.tabBars.buttons["Settings"].tap()
+        let connectedAt = app.descendants(matching: .any)["settings-connected-at"].firstMatch
+        XCTAssertTrue(connectedAt.waitForExistence(timeout: 5), "no connection time")
+        let logLink = app.buttons["settings-event-log"]
+        if !logLink.isHittable { app.swipeUp() }
+        logLink.tap()
+        let stopped = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Identify stopped")).firstMatch
+        XCTAssertTrue(stopped.waitForExistence(timeout: 5), "the log doesn't show identify")
     }
 }

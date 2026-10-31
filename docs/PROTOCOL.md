@@ -43,6 +43,7 @@ Every device topic has the form
 | `set-level` | app → hound | 0 | brightness, integer `0`–`100` as a decimal string |
 | `msg` | app → hound | 0 | status request; payload ignored (app sends `"0"`) |
 | `status-json` | hound → app | app subscribes at 1 | status JSON, see below |
+| `BatStats` | hound → app | app subscribes at 1 | battery text, see "Seen from a real hound" |
 
 The app never sets the retain flag.
 
@@ -121,8 +122,15 @@ got `set-state 1`, it published, unprompted and within a second:
 
 So the firmware sends status by itself after a command (at least after
 `set-state`), which partly answers Q2. Receivers must accept `ledState` as a
-boolean or as `1`/`0`; the app does now. `status` and `BatStats` aren't used
-yet. `BatStats` has voltage and current that the app could show later.
+boolean or as `1`/`0`; the app does now. `status` isn't used.
+
+The app reads `BatStats` for debug mode: the first `<n> V` is the voltage
+and the first `<n> mA` the current (negative while discharging); `SOC: <n> %`
+is read but the card's battery still comes from `status-json`. Any part may
+be missing; a payload with none of them is dropped. A `BatStats` from an
+index the app doesn't know yet is dropped too: only `status-json` adds a
+hound. The fake transport and `hound-sim` send `BatStats` right after every
+`status-json`.
 
 ## Lifecycle
 
@@ -135,8 +143,21 @@ yet. `BatStats` has voltage and current that the app could show later.
 5. On disconnect, mark every hound as not connected.
 
 Nothing tells the app a hound has gone offline: no LWT per device, no retained
-status and no timeout. A hound stays "connected" until the app's own MQTT
-connection drops.
+status. A hound that doesn't answer the poll within 3 s goes offline;
+otherwise it stays "connected" until the app's own MQTT connection drops.
+Debug mode shows when each hound was last heard. Pull to refresh polls
+every hound again (or connects), with the same 3 s answer time.
+
+## Identify (blinking a hound)
+
+There is no identify command in the firmware. The app makes a hound blink
+with what's there: `set-level 100` first if the hound is below 50, then
+`set-state` alternating every 0.5 s for 30 s (starting with the opposite of
+its current state). When it ends, or the user stops it, the app sends the
+old `set-level`, then the old `set-state` twice, 0.5 s apart, since messages
+go at most once. A `set-state` or `set-level` from the user stops the
+blinking without restoring: the user's command wins. A disconnect stops it
+too, with nothing restored.
 
 ## Master control
 

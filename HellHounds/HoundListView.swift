@@ -5,7 +5,8 @@
 //  The hound list: a connection banner, a master card that drives every
 //  hound, and one card per discovered hound with the name and look the
 //  user gave it. Hounds the user named that haven't reported get a small
-//  card saying so.
+//  card saying so. Pull down to ask every hound again; long-press a card to
+//  make its hound blink. Debug mode (Settings) adds details to each card.
 //
 
 import SwiftData
@@ -17,6 +18,7 @@ struct HoundListView: View {
 
     @Query private var profiles: [HoundProfile]
     @Environment(\.modelContext) private var modelContext
+    @AppStorage(DebugMode.key) private var debugMode = false
     @State private var editTarget: EditTarget?
 
     init(store: HoundStore, profileBroker: String) {
@@ -65,7 +67,10 @@ struct HoundListView: View {
                                 accessibilityPrefix: "hound-\(index)",
                                 setOn: { store.setOn($0, houndIndex: index) },
                                 setBrightness: { store.setBrightness($0, houndIndex: index) },
-                                edit: { editTarget = EditTarget(index: index, look: look) }
+                                edit: { editTarget = EditTarget(index: index, look: look) },
+                                isIdentifying: store.identifying.contains(index),
+                                identify: { store.toggleIdentify(houndIndex: index) },
+                                showsDebugDetails: debugMode
                             )
                         }
                     }
@@ -76,6 +81,7 @@ struct HoundListView: View {
                 .animation(.default, value: profiles.count)
                 .animation(.default, value: store.connectionState)
             }
+            .refreshable { await store.refresh() }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Hellhounds")
             .sheet(item: $editTarget) { target in
@@ -108,6 +114,12 @@ private struct HoundCard: View {
     let setBrightness: @MainActor (Int) -> Void
     /// Opens the edit sheet; nil for the master card.
     var edit: (@MainActor () -> Void)?
+    var isIdentifying = false
+    /// Starts or stops blinking; nil for the master card.
+    var identify: (@MainActor () -> Void)?
+    var showsDebugDetails = false
+
+    private var canIdentify: Bool { identify != nil && hound.isConnected && notFound == nil }
 
     /// The slider's value while dragging and until the hound reports back.
     @State private var draftBrightness: Double?
@@ -171,6 +183,17 @@ private struct HoundCard: View {
             if notFound == nil {
                 brightnessRow
             }
+            if isIdentifying {
+                identifyingRow
+            }
+            if showsDebugDetails && identify != nil {
+                DebugDetails(hound: hound)
+                if canIdentify && !isIdentifying, let identify {
+                    Button("Identify", systemImage: "light.beacon.max", action: identify)
+                        .buttonStyle(.bordered)
+                        .accessibilityIdentifier("\(accessibilityPrefix)-identify")
+                }
+            }
         }
         .tint(.orange)
         .padding()
@@ -181,6 +204,30 @@ private struct HoundCard: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(accessibilityPrefix)
         .onChange(of: hound.brightness) { draftBrightness = nil }
+        .contextMenu {
+            if canIdentify, let identify {
+                Button(isIdentifying ? "Stop Blinking" : "Identify (Blink 30 s)",
+                       systemImage: isIdentifying ? "stop.fill" : "light.beacon.max",
+                       action: identify)
+            }
+            if let edit {
+                Button("Edit", systemImage: "pencil", action: edit)
+            }
+        }
+    }
+
+    private var identifyingRow: some View {
+        HStack {
+            Label("Blinking so you can find it…", systemImage: "light.beacon.max")
+                .symbolEffect(.pulse)
+                .font(.subheadline)
+            Spacer(minLength: 0)
+            if let identify {
+                Button("Stop", action: identify)
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("\(accessibilityPrefix)-stop-identify")
+            }
+        }
     }
 
     private var brightnessRow: some View {
@@ -206,6 +253,50 @@ private struct HoundCard: View {
                 .frame(width: 44, alignment: .trailing)
         }
         .disabled(!hound.isConnected)
+    }
+}
+
+/// The extra rows debug mode shows on each hound's card.
+private struct DebugDetails: View {
+    let hound: Hound
+
+    var body: some View {
+        Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 4) {
+            row("Last heard") {
+                if let lastHeard = hound.lastHeard {
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        Text(lastHeard.timeAndAge(now: context.date))
+                    }
+                } else {
+                    Text("Not since launch")
+                }
+            }
+            if let stats = hound.batteryStats {
+                row("Battery") {
+                    Text([
+                        stats.voltage.map { "\($0.formatted(.number.precision(.fractionLength(2)))) V" },
+                        stats.milliamps.map { "\($0) mA" },
+                    ].compactMap(\.self).joined(separator: ", "))
+                }
+            }
+            row("Messages") { Text("\(hound.messagesSent) sent, \(hound.messagesReceived) received") }
+            row("Topic") { Text(verbatim: "\(HoundProtocol.topicPrefix)/\(hound.index)/").textSelection(.enabled) }
+            if let payload = hound.lastStatusPayload {
+                // Spaces after commas let the JSON wrap between fields.
+                row("Status") { Text(verbatim: payload.replacingOccurrences(of: ",", with: ", ")).textSelection(.enabled) }
+            }
+        }
+        .font(.caption.monospaced())
+        .foregroundStyle(.secondary)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("hound-\(hound.index)-debug")
+    }
+
+    private func row(_ label: String, @ViewBuilder value: () -> some View) -> some View {
+        GridRow {
+            Text(label).gridColumnAlignment(.trailing)
+            value()
+        }
     }
 }
 

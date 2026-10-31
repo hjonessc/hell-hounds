@@ -72,7 +72,8 @@ struct AppModelTests {
                 backgroundTime.begun += 1
                 backgroundTime.expire = expired
                 return { backgroundTime.ended += 1 }
-            }
+            },
+            log: EventLog()
         )
     }
 

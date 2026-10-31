@@ -1,6 +1,6 @@
 # Project state
 
-_Last updated: 2026-10-30 (session 7)_
+_Last updated: 2026-10-31 (session 8)_
 
 **Plain language:** Hell Hounds is an iOS app that controls homemade LED
 "hellhounds" (D1 mini pro boards on battery) over MQTT. The working app is a
@@ -82,6 +82,31 @@ TestFlight and checked on the phones. No phase is in progress.
   Xcode-Username"). On 2026-10-30 the user installed 1.0 (3) and checked
   on the phones: a quick app switch didn't reconnect, and a hound that was
   off showed "Not found".
+- **Session 8 (2026-10-30/31), troubleshooting features the user asked
+  for, app-only (no firmware changes):**
+  1. Settings › Connection shows "Connected Since" / "Last Connected" and
+     "Disconnected" times (`HoundStore.connectedAt` / `disconnectedAt`).
+  2. Help: Settings › How It Works & Troubleshooting (`HelpView`), plain
+     language.
+  3. Pull to refresh on the hound list: `HoundStore.refresh()` polls every
+     hound again (or connects) and returns when the known hounds have
+     answered or after the 3 s answer time.
+  4. Event log: `EventLog`, newest 1,000 entries in
+     `Application Support/event-log.json` (excluded from backup, never
+     synced). Settings › Event Log (`EventLogView`): hound names, filter by
+     hound, share as text, clear. Logs connections, transport failures (new
+     `MQTTTransportEvent.failed`), hounds found / back online / offline,
+     commands, polls, statuses (not while blinking) and app
+     foreground/background.
+  5. Identify: long-press a card › Identify, or the debug-mode button.
+     Blinks with `set-state` every 0.5 s for 30 s and restores the old
+     state (see PROTOCOL.md "Identify"). A user command stops it.
+  6. Debug mode (Settings toggle, `@AppStorage("debugMode")`, also
+     `-debugMode YES`): each card shows last heard, battery V/mA (the
+     app now reads `BatStats`), messages sent/received, topic and the raw
+     last `status-json`.
+  Fake transport and `hound-sim` now send `BatStats` too. 69 unit + 5 UI
+  tests. Not yet on TestFlight; not checked on a real hound.
 
 ## Phased plan
 

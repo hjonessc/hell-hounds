@@ -86,4 +86,23 @@ struct HoundStatusTests {
     func malformedPayloadsAreRejected(payload: String) {
         #expect(HoundStatus(payload: payload) == nil)
     }
+
+    // MARK: - BatStats
+
+    @Test func batStatsFromARealHound() {
+        let stats = BatteryStats(payload: " SOC: 90 %\n4.00 V | -79 mA\nTime: 155.45")
+        #expect(stats == BatteryStats(charge: 90, voltage: 4.0, milliamps: -79))
+    }
+
+    @Test func batStatsWithPartsMissing() {
+        #expect(BatteryStats(payload: "3.98 V") == BatteryStats(charge: nil, voltage: 3.98, milliamps: nil))
+        #expect(BatteryStats(payload: "hello") == nil)
+        #expect(BatteryStats(payload: "") == nil)
+    }
+
+    @Test func batStatsTopicGivesTheIndex() {
+        #expect(HoundProtocol.index(fromTopic: "HellHounds-MQTT/4/BatStats", leaf: .batStats) == 4)
+        #expect(HoundProtocol.index(fromTopic: "HellHounds-MQTT/4/status-json", leaf: .batStats) == nil)
+        #expect(HoundProtocol.statusIndex(fromTopic: "HellHounds-MQTT/4/BatStats") == nil)
+    }
 }

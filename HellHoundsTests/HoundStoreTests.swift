@@ -3,9 +3,11 @@
 //  HellHoundsTests
 //
 //  Discovery and the status / set-state / set-level round trip through
-//  HoundStore and the in-app fake transport.
+//  HoundStore and the in-app fake transport; also refresh, identify and
+//  what debug mode and the event log show.
 //
 
+import Foundation
 import Testing
 @testable import HellHounds
 
@@ -37,6 +39,11 @@ struct HoundStoreTests {
         MQTTMessage(topic: HoundProtocol.topic(.statusJSON, index: index), payload: payload)
     }
 
+    /// Just what the card shows, without the debug details.
+    private func shown(_ hound: Hound?) -> Hound? {
+        hound.map { Hound(index: $0.index, isConnected: $0.isConnected, isOn: $0.isOn, brightness: $0.brightness, battery: $0.battery) }
+    }
+
     private var probeTopics: [String] {
         (0..<8).map { HoundProtocol.topic(.getStatus, index: $0) }
     }
@@ -50,7 +57,7 @@ struct HoundStoreTests {
     @Test func connectSubscribesToTheWildcardAndPollsTheProbeRange() async throws {
         try await connectAndWaitForAllHounds()
         #expect(store.connectionState == .connected)
-        #expect(fake.subscriptions == ["HellHounds-MQTT/+/status-json"])
+        #expect(fake.subscriptions == ["HellHounds-MQTT/+/status-json", "HellHounds-MQTT/+/BatStats"])
         #expect(fake.published.map(\.topic) == probeTopics)
         #expect(store.hounds.map(\.index) == [0, 1, 2, 3])
         #expect(store.hounds.map(\.battery) == [100, 70, 40, 10])
@@ -90,7 +97,7 @@ struct HoundStoreTests {
         fake.hounds[12] = .init(isOn: true, level: 5, battery: 60)
         fake.sendStatus(index: 12)  // reporting on its own, unasked
         #expect(try await eventually { store.hounds.count == 5 })
-        #expect(store.hounds.last == Hound(index: 12, isConnected: true, isOn: true, brightness: 5, battery: 60))
+        #expect(shown(store.hounds.last) == Hound(index: 12, isConnected: true, isOn: true, brightness: 5, battery: 60))
 
         fake.dropConnection()
         #expect(try await eventually { store.connectionState == .disconnected })
@@ -124,7 +131,7 @@ struct HoundStoreTests {
         fake.deliver(status(index: 1, #"{"ledState":true,"ledLvl":77,"battery":70}"#))
 
         #expect(try await eventually { store.hounds[1].isOn })
-        #expect(store.hounds[0] == Hound(index: 0, isConnected: true, isOn: false, brightness: 50, battery: 100))
+        #expect(shown(store.hounds[0]) == Hound(index: 0, isConnected: true, isOn: false, brightness: 50, battery: 100))
     }
 
     @Test func missingFieldsKeepThePreviousValues() async throws {
@@ -220,7 +227,7 @@ struct HoundStoreTests {
         let before = fake.published.count
         store.connect()
         #expect(try await eventually { store.hounds.allSatisfy(\.isConnected) })
-        #expect(fake.subscriptions.count == 1)
+        #expect(fake.subscriptions.count == 2)
         #expect(fake.published.dropFirst(before).map(\.topic) == probeTopics)
     }
 
@@ -281,4 +288,169 @@ struct HoundStoreTests {
         fake.dropConnection()
         #expect(try await eventually { store.hounds.allSatisfy { !$0.isConnected } })
     }
+
+    // MARK: - Debug details
+
+    @Test func eachHoundRecordsWhenItWasHeardAndItsMessages() async throws {
+        let clock = Clock()
+        let fake = FakeMQTTTransport()
+        let store = HoundStore(transport: fake, statusPollDelay: .zero, now: { clock.now })
+        store.connect()
+        #expect(try await eventually { store.hounds.count == 4 && store.hounds.allSatisfy { $0.batteryStats != nil } })
+        #expect(store.connectedAt == clock.now)
+        #expect(store.hounds[1].lastHeard == clock.now)
+        #expect(store.hounds[1].lastStatusPayload == #"{"ledState":false,"ledLvl":50,"battery":70}"#)
+        #expect(store.hounds[1].messagesReceived == 2)  // status-json and BatStats
+        #expect(store.hounds[1].batteryStats == BatteryStats(charge: 70, voltage: 3.93, milliamps: -79))
+
+        clock.now += 60
+        store.setOn(true, houndIndex: 1)
+        #expect(try await eventually { store.hounds[1].isOn })
+        #expect(store.hounds[1].lastHeard == clock.now)
+        #expect(store.hounds[1].messagesSent == 2, "the poll and the command")
+
+        fake.dropConnection()
+        #expect(try await eventually { store.disconnectedAt == clock.now })
+    }
+
+    @Test func batteryStatsFromAnUnknownHoundAreIgnored() async throws {
+        fake.hounds = [:]
+        store.connect()
+        try #require(try await eventually { store.connectionState == .connected })
+        fake.deliver(MQTTMessage(topic: HoundProtocol.topic(.batStats, index: 7), payload: " SOC: 90 %\n4.00 V | -79 mA"))
+        fake.deliver(status(index: 2, #"{"ledState":true}"#))
+        #expect(try await eventually { store.hounds.count == 1 })
+        #expect(store.hounds.map(\.index) == [2])
+    }
+
+    // MARK: - Refresh
+
+    @Test func refreshAsksEveryHoundAgain() async throws {
+        try await connectAndWaitForAllHounds()
+        let before = fake.published.count
+        fake.hounds[1]?.battery = 12
+        await store.refresh()
+        #expect(fake.published.dropFirst(before).map(\.topic) == probeTopics)
+        #expect(store.hounds[1].battery == 12)
+    }
+
+    @Test func refreshConnectsWhenDisconnected() async throws {
+        await store.refresh()
+        #expect(store.connectionState == .connected)
+        #expect(store.hounds.count == 4)
+    }
+
+    @Test func refreshMarksHoundsThatDontAnswerOffline() async throws {
+        let fake = FakeMQTTTransport()
+        let store = HoundStore(transport: fake, statusPollDelay: .zero, answerTimeout: .milliseconds(100))
+        store.connect()
+        try #require(try await eventually { store.hounds.count == 4 && !store.isDiscovering })
+        fake.hounds[2] = nil
+        await store.refresh()
+        #expect(store.hounds.map(\.isConnected) == [true, true, false, true])
+    }
+
+    // MARK: - Identify
+
+    /// Its own fake: two stores on one transport would split its events.
+    private func identifyStore(_ fake: FakeMQTTTransport) -> HoundStore {
+        HoundStore(transport: fake, statusPollDelay: .zero, identifyDuration: .milliseconds(200), identifyBlink: .milliseconds(20))
+    }
+
+    private func sent(_ fake: FakeMQTTTransport, to index: Int, after count: Int) -> [String] {
+        fake.published.dropFirst(count)
+            .filter { HoundProtocol.index(fromTopic: $0.topic, leaf: .setState) == index || HoundProtocol.index(fromTopic: $0.topic, leaf: .setLevel) == index }
+            .map { "\($0.topic.split(separator: "/").last!) \($0.payload)" }
+    }
+
+    @Test func identifyBlinksThenGoesBackToHowItWas() async throws {
+        let fake = FakeMQTTTransport(hounds: [0: .init(isOn: true, level: 80)])
+        let store = identifyStore(fake)
+        store.connect()
+        try #require(try await eventually { store.hounds.first?.isConnected == true })
+        let before = fake.published.count
+
+        store.toggleIdentify(houndIndex: 0)
+        #expect(store.identifying == [0])
+        #expect(try await eventually { store.identifying.isEmpty })
+        try await Task.sleep(for: .milliseconds(60))  // the second restore
+
+        let commands = sent(fake, to: 0, after: before)
+        #expect(commands.prefix(4) == ["set-state 0", "set-state 1", "set-state 0", "set-state 1"])
+        #expect(commands.suffix(3) == ["set-level 80", "set-state 1", "set-state 1"])
+        #expect(fake.hounds[0] == .init(isOn: true, level: 80))
+    }
+
+    @Test func identifyingADimHoundTurnsItUpAndBack() async throws {
+        let fake = FakeMQTTTransport(hounds: [0: .init(isOn: false, level: 10)])
+        let store = identifyStore(fake)
+        store.connect()
+        try #require(try await eventually { store.hounds.first?.isConnected == true })
+        let before = fake.published.count
+
+        store.toggleIdentify(houndIndex: 0)
+        #expect(try await eventually { sent(fake, to: 0, after: before).count >= 2 })
+        #expect(sent(fake, to: 0, after: before).prefix(2) == ["set-level 100", "set-state 1"])
+        store.toggleIdentify(houndIndex: 0)  // stopped early
+        #expect(store.identifying.isEmpty)
+        #expect(sent(fake, to: 0, after: before).suffix(2) == ["set-level 10", "set-state 0"])
+        #expect(try await eventually { fake.hounds[0] == .init(isOn: false, level: 10) })
+    }
+
+    @Test func aCommandStopsIdentifyingAndWins() async throws {
+        let fake = FakeMQTTTransport(hounds: [0: .init(isOn: false, level: 80)])
+        let store = identifyStore(fake)
+        store.connect()
+        try #require(try await eventually { store.hounds.first?.isConnected == true })
+
+        store.toggleIdentify(houndIndex: 0)
+        store.setOn(true, houndIndex: 0)
+        #expect(store.identifying.isEmpty)
+        let before = fake.published.count
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(fake.published.count == before, "no more blinking and no restore")
+        #expect(fake.hounds[0]?.isOn == true)
+    }
+
+    @Test func offlineHoundsDontIdentify() async throws {
+        store.toggleIdentify(houndIndex: 0)
+        #expect(store.identifying.isEmpty)
+    }
+
+    // MARK: - Event log
+
+    @Test func theLogTellsTheStory() async throws {
+        let log = EventLog()
+        let fake = FakeMQTTTransport(hounds: [0: .init(), 1: .init()])
+        let store = HoundStore(transport: fake, log: log, statusPollDelay: .zero, answerTimeout: .milliseconds(100))
+        store.connect()
+        try #require(try await eventually { store.hounds.count == 2 && !store.isDiscovering })
+        store.setOn(true, houndIndex: 1)
+        try #require(try await eventually { store.hounds[1].isOn })
+        fake.hounds[0] = nil
+        await store.refresh()
+        fake.deliver(status(index: 1, "garbage"))
+        try #require(try await eventually { log.entries.last?.text.hasPrefix("Ignored") == true })
+
+        #expect(log.entries.map(\.text) == [
+            "Connected to the broker",
+            "Asked hounds 1, 2, 3, 4, 5, 6, 7, 8 for their status",
+            "Found: off, 50 %, battery 100 %",
+            "Found: off, 50 %, battery 100 %",
+            "Switch on (set-state 1)",
+            "Status: on, 50 %, battery 100 %",
+            "Refresh: asking every hound for its status",
+            "Asked hounds 1, 2, 3, 4, 5, 6, 7, 8 for their status",
+            "Status: on, 50 %, battery 100 %",
+            "Didn't answer; now offline",
+            "Ignored a status it couldn't read: garbage",
+        ])
+        #expect(log.entries.map(\.houndIndex) == [nil, nil, 0, 1, 1, 1, nil, nil, 1, 0, 1])
+    }
+}
+
+/// A clock the test moves by hand.
+@MainActor
+private final class Clock {
+    var now = Date(timeIntervalSince1970: 1_800_000_000)
 }
